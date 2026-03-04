@@ -18,6 +18,12 @@ TSS signing is split across two processes:
 
 The guard-service spawns the Go binary as a child process and communicates via HTTP. Go binaries communicate with each other via P2P messages routed through the guard-service's libp2p dialer.
 
+### Go Binary Lifecycle
+
+The guard-service [spawns](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts) the Go binary as a child process with a random trust key (UUID). The trust key is included in all callbacks; the guard-service rejects callbacks with a wrong key, preventing stale responses from crashed/restarted binaries. On crash, auto-restart after 5 seconds.
+
+The Go binary ([main.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/main.go)) listens on `localhost:9000` (configurable) and exposes: `GET /threshold`, `POST /getPK`, `POST /sign`, `POST /keygen`, `POST /message` (P2P relay). At startup, it loads existing keygen data (if any), subscribes to the `tss` P2P channel, and starts serving.
+
 ### Algorithm Families
 
 | Algorithm | Curve | Chains | Key Derivation |
@@ -118,12 +124,6 @@ The Go binary stores keygen shares in a single file per algorithm ([storage.go](
 ### Regroup (Future)
 
 If reshare/regroup were implemented, the old and new guard sets would jointly produce fresh shares for the new set, preserving the same public key: no address changes, no migration. tss-lib already provides the resharing protocol. The missing work is Rosen Bridge's wrapper: an HTTP endpoint in the Go binary, P2P message routing, share storage handling, and TypeScript coordination (same pattern as keygen and sign).
-
-## Go Binary Lifecycle
-
-The guard-service [spawns](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts) the Go binary as a child process with a random trust key (UUID). The trust key is included in all callbacks; the guard-service rejects callbacks with a wrong key, preventing stale responses from crashed/restarted binaries. On crash, auto-restart after 5 seconds.
-
-The Go binary ([main.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/main.go)) listens on `localhost:9000` (configurable) and exposes: `GET /threshold`, `POST /getPK`, `POST /sign`, `POST /keygen`, `POST /message` (P2P relay). At startup, it loads existing keygen data (if any), subscribes to the `tss` P2P channel, and starts serving.
 
 ## Guard Secrets and Key Material
 

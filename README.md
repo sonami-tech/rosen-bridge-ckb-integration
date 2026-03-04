@@ -22,21 +22,26 @@ CKB's Cell model uses programmable lock scripts to control asset ownership. Mult
 
 - **On-chain multisig**: CKB has a [multisig lock script](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_multisig_all.c) deployed as a system script, supporting M-of-N threshold signing (N up to 255, covering the target ~30-guard set). [Omnilock](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0042-omnilock/0042-omnilock.md) (auth flag `0x06`) provides the same multisig with composable modes (Anyone-Can-Pay, time-lock, supply).
 
-- **Threshold Signature Scheme (TSS)**: CKB's default secp256k1-blake160 lock script supports standard ECDSA signatures, making it compatible with the ECDSA TSS scheme used by Rosen Bridge for Bitcoin, Doge, and Ethereum. Cardano uses EdDSA TSS, which is not applicable here.
+- **Threshold Signature Scheme (TSS)**: CKB's default [secp256k1-blake160-sighash-all](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_sighash_all.c) lock script supports standard ECDSA signatures, making it compatible with the ECDSA TSS scheme used by Rosen Bridge for Bitcoin, Doge, and Ethereum.
 
-Either approach allows guards to jointly control a bridge address from which assets can only be transferred with the required number of signatures.
+**Chosen approach: ECDSA TSS (Threshold Signature Scheme).** The default lock verifies a standard ECDSA signature, indistinguishable from the one produced by TSS. The lock address is `blake160(tss_shared_pubkey)`. CKB uses the same signing backend as Bitcoin, Ethereum, Doge, and Binance: the existing [tss-api](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api) Go binary and [TssSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/tssSigner.ts) TypeScript coordination. No new signing package is needed.
 
-**Chosen approach: [Omnilock](https://github.com/cryptape/omnilock) with CKB multisig auth (flag `0x06`).** Omnilock's [`IdentityCkbMultisig`](https://github.com/cryptape/omnilock/blob/main/c/ckb_identity.h) runs the same `verify_multisig` as the standalone system script (identical flag parsing, signature recovery, pubkey matching, and threshold/require_first_n enforcement). Its composable Anyone-Can-Pay (ACP) mode lets a single script handle both custody (multisig-signed spending) and deposits (ACP unlock without signature); see [State Rent](#state-rent) for details.
+On-chain multisig was not selected (see [signing approach comparison](./guard-signing/comparison.md)) because:
 
-We are collaborating with the [CCC (Common Chains Connector)](https://github.com/ckb-devrel/ccc) team to add Multisig Omnilock support ([PR #349](https://github.com/ckb-devrel/ccc/pull/349)), building on its existing primitives for multisig encoding, sighash computation, and Omnilock witness construction. CKB will be the only non-Ergo chain in Rosen Bridge to use on-chain multisig rather than TSS.
+- **Security parity**: On-chain multisig makes the M-of-N threshold visible to observers, but the security guarantee is equivalent: TSS cannot produce a valid signature without M parties participating in the MPC protocol ([proven in tss-lib](https://github.com/bnb-chain/tss-lib)). The same TSS backend already secures 5+ chains with higher TVL than CKB would carry. Hardening only CKB does not strengthen the bridge as a whole.
+- **Operational isolation**: During guard rotation, every non-Ergo chain must migrate assets to the new address. With TSS, CKB piggybacks on the bridge-wide migration event (all ECDSA chains rotate together using the same tooling). With multisig, CKB would be the only non-Ergo chain migrating through a non-TSS signing path, requiring its own migration procedures and tooling that no other chain uses. Ergo does not need migration (its Lock address is stable across rotations).
+- **New signing package**: Both multisig variants require a new `@rosen-bridge/ckb-multi-sig` package for P2P signature collection and witness assembly (~500-1000 LOC). TSS reuses the existing signing backend shared by 5+ chains with zero new signing code.
+- **Draft tooling dependency (Omnilock)**: Omnilock multisig witness encoding depends on CCC PR [#360](https://github.com/ckb-devrel/ccc/pull/360) (draft, not merged). The system multisig script avoids PR #360 but depends on CCC PR [#349](https://github.com/ckb-devrel/ccc/pull/349) (open, not merged) for multisig signer support, and still lacks ACP composability (requires a separate ACP lock for deposits, same as TSS, without the benefit of reusing existing signing infrastructure).
+
+Deposits use the standalone [RFC 0026 Anyone-Can-Pay (ACP)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md) lock, which extends `secp256k1-blake160-sighash-all` with relaxed deposit rules; see [State Rent](#state-rent) and [Lock Scripts](#lock-scripts) for details.
 
 The [Quantum Resistant Lock (QRL)](https://github.com/cryptape/quantum-resistant-lock-script) was also considered for its post-quantum security, but was not selected for v1.0 because:
 
 - **Premature**: Every other chain in Rosen Bridge uses ECDSA or EdDSA TSS, none of which are quantum resistant. Hardening only the CKB side protects nothing, since an attacker who can break ECDSA can compromise the bridge through any other connected chain.
-- **Maturity**: The bridge minimizes smart contract risk by depending only on battle-tested scripts (Omnilock, xUDT). QRL has been [audited by Scalebit](https://scalebit.xyz/reports/20251216-Quantum-Resistant-Lock-Script-Final-Audit-Report.pdf), but it has no production track record. Omnilock's multisig auth uses the same secp256k1 algorithm that has been in production since CKB genesis.
-- **ACP**: QRL has no built-in ACP support. Deposit cells would need Omnilock `0xFC` (owner lock delegation), requiring an extra input cell per consolidation transaction, increasing cell state contention, and adding implementation complexity.
-- **Upgrade risk**: Both QRL and Omnilock are deployed by type (upgradable). With Omnilock `0x06`, the bridge depends on one upgradable script; adding QRL via `0xFC` delegation doubles the upgrade surface. An unsynchronized upgrade to either script could cause downtime.
-- **Tooling**: CCC has no QRL support. Omnilock multisig CCC integration is in progress, covering address generation, witness construction, and sighash computation.
+- **Maturity**: The bridge minimizes smart contract risk by depending only on battle-tested scripts (default secp256k1-blake160 lock, RFC 0026 ACP, xUDT). QRL has been [audited by Scalebit](https://scalebit.xyz/reports/20251216-Quantum-Resistant-Lock-Script-Final-Audit-Report.pdf), but it has no production track record. The default lock and ACP lock use the same secp256k1 algorithm that has been in production since CKB genesis.
+- **ACP**: QRL has no built-in ACP support. The bridge's deposit cells use the [RFC 0026 ACP](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md) lock, which requires a secp256k1 signature for spending. QRL on custody cells would leave deposit cells (and their spending path) quantum-vulnerable, providing incomplete protection.
+- **Upgrade risk**: QRL is deployed by type (upgradable). The bridge's current lock scripts are both referenced by `data` hash, with zero upgrade risk (the default lock is a genesis system script; the ACP lock has not been upgraded since 2020). Adding QRL would introduce an upgradable dependency where currently there are none.
+- **Tooling**: CCC has no QRL support. Address generation, witness construction, and sighash computation would all require custom implementation.
 
 QRL can be revisited for a future v2.0 upgrade once other Rosen Bridge chains adopt quantum-resistant signing, QRL gains adoption in the Nervos ecosystem, and CCC adds support for it.
 
@@ -73,6 +78,8 @@ Under sUDT and xUDT, each token balance lives in a cell, and native CKB is carri
 
 **Minting bridge tokens:** Bridged token representations on CKB (e.g. rsADA, rsERG) are minted once at maximum supply (2^128 - 1) using a [single-use lock](https://github.com/ckb-devrel/ckb-proxy-locks/tree/main/contracts/single-use-lock) (referenced immutably by `data1` on mainnet). The lock permanently destroys the mint key after the initial mint, eliminating infinite-mint attack vectors. This is a deliberate tradeoff applied across all Rosen Bridge chains: tokens with uncapped supply on their home chain cannot have their full supply bridged, but 2^128 is large enough that this is never a practical constraint.
 
+Beyond the standard choice, each candidate token must be compatible with bridge metadata in cell data and free of issuer-controlled transfer restrictions.
+
 **Bridging existing ecosystem tokens:** A token is bridgeable if its type script validates only the first 16 bytes of cell data (the little-endian `u128` amount), since bridge metadata appended after the amount is ignored. sUDT tokens qualify unconditionally (no extension mechanism).
 
 For xUDT tokens, bridgeability requires extension bits = 0 in the flags field (no active extension scripts). Owner mode bits in the same flags field control minting authority but do not affect bridgeability. For example, [iCKB](https://github.com/ickb/whitepaper) sets owner mode bits to enable minting via its logic script, but has no active extensions, so it is bridgeable. See [xudt_rce.c](https://github.com/nervosnetwork/ckb-production-scripts/blob/master/c/xudt_rce.c) for the flags layout and `simple_udt()` validation logic.
@@ -95,22 +102,17 @@ Unlike most chains, CKB requires every cell (UTXO) to carry enough CKB to cover 
 
 Multiple ACP cells per token avoid state contention when users deposit concurrently. The UI selects an available ACP cell; when all are consumed by pending deposits, it chains off a pending transaction's output.
 
-For native CKB deposits, the user adds CKB to a designated xUDT ACP cell (increasing its CKB capacity while the xUDT amount stays unchanged); xUDT with no active extensions ignores appended metadata after the 16-byte amount.
+For native CKB deposits, the user adds CKB to a designated xUDT ACP cell, increasing its CKB capacity without affecting the xUDT amount or bridge metadata already present (see [Token Support](#token-support) for why this is safe).
 
-#### Omnilock
+#### Lock Scripts
 
-**Lock script:** The ACP cells use [Omnilock](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0042-omnilock/0042-omnilock.md) with auth flag `0x06` (CKB multisig), where the 20-byte auth content is `blake160(S|R|M|N|pubkey_hashes)` (the same blake160 hash used by the standalone multisig script). The Omnilock flags byte enables ACP mode (`0x02`). Bridge ACP cells require 146 CKB minimum capacity (the extra bytes come from the longer lock script `args`). Bridge custody/change cells (Omnilock `0x06` without ACP, 22-byte `args`) require 144 CKB with xUDT.
+The two lock scripts introduced in [Multi-Signer Addresses](#1-multi-signer-addresses) both use `blake160(tss_shared_pubkey)` in lock args: the [default secp256k1-blake160-sighash-all](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_sighash_all.c) lock for custody cells, and the [RFC 0026 Anyone-Can-Pay (ACP)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md) lock for deposit cells. The default lock is a [system script](https://github.com/nervosnetwork/ckb-system-scripts) deployed in CKB's genesis block; the ACP lock was deployed post-genesis but has never been upgraded since 2020. Both are safe to reference by `data` hash (immutable content addressing).
 
-**ACP validation:** At least one of CKB or xUDT must increase by at least the configured minimum (`10^n`, where `n` is the corresponding byte in the Omnilock args). The other must remain exactly unchanged ([`omni_lock_acp.h:218`](https://github.com/cryptape/omnilock/blob/main/c/omni_lock_acp.h#L218) rejects any delta below the minimum, including partial increases).
+**Custody cells (default lock):** Guards spend custody cells by placing the TSS-produced 65-byte recoverable ECDSA signature in `WitnessArgs.lock`. The lock recovers the public key from the signature, computes `blake160(recovered_pubkey)`, and compares against lock args. Bridge custody cells require 142 CKB minimum capacity with xUDT.
 
-**Unlock paths:** The witness determines which of two mutually exclusive paths runs ([`omni_lock.c:442`](https://github.com/cryptape/omnilock/blob/main/c/omni_lock.c)):
+**Deposit cells (ACP lock):** The RFC 0026 ACP lock extends `secp256k1-blake160-sighash-all` with relaxed deposit rules. Users deposit without signature: at least one of CKB or xUDT must increase by at least the configured minimum (`10^n`, where `n` is the corresponding byte in lock args after the 20-byte pubkey hash). The other must remain exactly unchanged ([`anyone_can_pay.c`](https://github.com/cryptape/anyone-can-pay/blob/main/c/anyone_can_pay.c) rejects any delta below the minimum, including partial increases). Bridge ACP cells require 144 CKB minimum capacity with xUDT (before metadata).
 
-- **With signature:** Omnilock runs multisig verification (`generate_sighash_all` + `verify_multisig`), validating M-of-N secp256k1 signatures against the `blake160` in the auth content.
-- **Without signature:** Only the ACP path runs, enforcing [RFC 0026](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md) deposit rules. Users deposit this way; no bridge signature is needed.
-
-**Consolidation:** To consolidate, the bridge places the full multisig witness (S|R|M|N|pubkey_hashes + M recoverable ECDSA signatures) in the `OmniLockWitnessLock.signature` field. Since the Omnilock cell's own witness carries the multisig proof, no separate input cell is needed.
-
-**Time-lock mode:** Omnilock supports an optional time-lock mode (flags bit `0b00000100`, [`omni_lock.c:179`](https://github.com/cryptape/omnilock/blob/main/c/omni_lock.c)). The bridge does not enable it: the `omnilock_flags` byte uses only the ACP bit (`0x02`) for deposit cells and no flags (`0x00`) for custody cells. Time-locked bridge cells would add operational complexity (guards must wait for the lock period) with no clear security benefit, since the multisig threshold already prevents unauthorized spending.
+**Consolidation:** The bridge spends ACP cells using the standard spending path (TSS signature in `WitnessArgs.lock`). The ACP lock uses the same sighash algorithm as the default lock, so the same TSS key signs for both cell types. When a transaction mixes both lock scripts as inputs (e.g. ACP deposit cells plus a custody cell for fee funding), each [script group](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0022-transaction-structure/0022-transaction-structure.md) requires its own witness entry with a separate TSS signature over its sighash. TSS supports up to 5 parallel signatures per turn, so this does not constrain throughput.
 
 #### Transaction Fee Handling
 
@@ -134,19 +136,21 @@ Each CKB output has a unique OutPoint (transaction hash + output index), so ever
 
 ### CKB Technical Parameters
 
-| Parameter           | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Block time          | ~10 seconds (variable, difficulty-adjusted)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Confirmation policy | 50 blocks (~8 minutes). [RGB++ security analysis](https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/security-analysis-en.md) (based on [Ren Zhang's](https://scholar.google.com/citations?hl=en&user=JB1uRvQAAAAJ) research) shows 24 CKB confirmations match the security of 6 Bitcoin confirmations (30% adversary hash rate, 2.5% orphan rate). We double that to 50 for additional safety margin, which also matches CCC's [`DEFAULT_CONFIRMED_BLOCK_TIME`](https://github.com/ckb-devrel/ccc/blob/master/packages/core/src/client/cache/memory.advanced.ts) |
-| Address format      | [CKB Address Format (RFC 0021)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md). Bech32m with `ckb` prefix (mainnet)                                                                                                                                                                                                                                                                                                                                                                                               |
-| Key derivation      | BIP-32/44 path `m/44'/309'/0'` (coin type 309)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Native token        | CKB (1 CKB = 10^8 shannons)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Cell capacity       | 1 CKB per byte of on-chain storage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Basic cell          | 61 CKB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| xUDT cell           | 142 CKB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Bridge custody cell | 144 CKB (Omnilock xUDT, no ACP)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Bridge ACP cell     | 146 CKB (before metadata)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Full node resources | Configuration-dependent. Some [community nodes](https://talk.nervos.org/t/dis-build-and-distribute-efficient-network-nodes/7594) run on ARM SBCs, that said, Bridge nodes need the built-in indexer RPC enabled                                                                                                                                                                                                                                                                                                                                                                |
+| Parameter | Value |
+| --- | --- |
+| Block time | ~10 seconds (variable, difficulty-adjusted) |
+| Confirmation policy | 50 blocks (~8 minutes) |
+| Address format | [CKB Address Format (RFC 0021)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md). Bech32m with `ckb` prefix (mainnet) |
+| Key derivation | BIP-32/44 path `m/44'/309'/0'` (coin type 309) |
+| Native token | CKB (1 CKB = 10^8 shannons) |
+| Cell capacity | 1 CKB per byte of on-chain storage |
+| Basic cell | 61 CKB |
+| xUDT cell | 142 CKB |
+| Bridge custody cell | 142 CKB (default lock xUDT) |
+| Bridge ACP cell | 144 CKB (before metadata) |
+| Full node resources | Configuration-dependent (some [community nodes](https://talk.nervos.org/t/dis-build-and-distribute-efficient-network-nodes/7594) run on ARM SBCs). Bridge nodes need the built-in indexer RPC enabled |
+
+The 50-block confirmation policy is based on the [RGB++ security analysis](https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/security-analysis-en.md) ([Ren Zhang's](https://scholar.google.com/citations?hl=en&user=JB1uRvQAAAAJ) research), which shows 24 CKB confirmations match the security of 6 Bitcoin confirmations (30% adversary hash rate, 2.5% orphan rate). We double that to 50 for additional safety margin, matching CCC's [`DEFAULT_CONFIRMED_BLOCK_TIME`](https://github.com/ckb-devrel/ccc/blob/master/packages/core/src/client/cache/memory.advanced.ts).
 
 ## Implementation Plan
 
@@ -193,7 +197,7 @@ The extractor parses CKB lock transactions to extract bridge request data (`toCh
 
 **Wire format:** The extractor uses the same binary serialization format (`parseRosenData`) used by Bitcoin and similar chains: `[1B toChain index][8B bridgeFee BE u64][8B networkFee BE u64][1B toAddress length][variable toAddress]`. The fixed overhead is 18 bytes; total metadata size varies by destination address length (e.g. 38 bytes for Ethereum, 51 bytes for Ergo, 75 bytes for Cardano).
 
-Since metadata is stored in cell data, it increases the ACP cell's minimum capacity requirement by the same byte count (a bridge ACP cell targeting Cardano destinations needs 146 + 75 = 221 CKB minimum).
+Since metadata is stored in cell data, it increases the ACP cell's minimum capacity requirement by the same byte count (a bridge ACP cell targeting Cardano destinations needs 144 + 75 = 219 CKB minimum).
 
 **Amount computation:** Unlike non-ACP chains where the output value equals the deposit amount, ACP deposits add to an existing cell. The transferred amount is computed as the difference between the output and input cell values (CKB capacity for native deposits, xUDT amount for token deposits), using the resolved input data provided by the scanner (see [Phase 1](#phase-1-scanner)).
 
@@ -234,7 +238,7 @@ Design considerations:
 
 - **Box selection**: CKB cells have a minimum capacity requirement (61+ CKB). The chain implementation must account for this when selecting inputs and creating change outputs.
 - **xUDT handling**: Token transfers require creating output cells with the correct type script and UDT amount in cell data, plus sufficient CKB capacity to cover cell storage.
-- **ACP cell management**: The bridge maintains a pool of Omnilock ACP cells for receiving xUDT deposits. The chain must manage consolidation and keep enough ACP cells available for concurrent deposits. Key operational parameters:
+- **ACP cell management**: The bridge maintains a pool of ACP cells for receiving xUDT deposits. The chain must manage consolidation and keep enough ACP cells available for concurrent deposits. Key operational parameters:
   - Initial pool size per token
   - Threshold for deploying additional ACP cells
   - Consolidation strategy for cells that accumulate many small deposits (merging capacity back into fewer cells)
@@ -259,27 +263,23 @@ Key `CkbChain` method implementations (inherited from `AbstractChain` and `Abstr
 - **`getTransactionAssets`**: Extract CKB capacity and xUDT amounts from transaction inputs/outputs (parse 16-byte LE `u128` from cell data, identify tokens by type script)
 - **`extractTransactionOrder`**: Extract the payment order (destination addresses and asset amounts) from a `PaymentTransaction`
 - **`verifyTransactionFee`**: Validate that the fee covers transaction weight (`max(serialized_size, cycles * bytes_per_cycle)`)
-- **`signTransaction`**: Assemble Omnilock multisig witnesses from individually collected guard signatures
+- **`signTransaction`**: Place the TSS-produced 65-byte ECDSA signature in `WitnessArgs.lock` for each script group
 - **`submitTransaction`**: Broadcast signed transaction via CKB RPC (`send_transaction`)
 - **`rawTxToPaymentTransaction`**: Convert a raw CKB transaction JSON into the guard-service `PaymentTransaction` format
 - **`getMempoolBoxMapping`**: Map spent OutPoints to their replacement cells from the CKB tx pool, preventing double-spend during concurrent bridge operations
 - **`verifyPaymentTransaction`**: Verify internal consistency of a `PaymentTransaction` (txId matches serialized transaction, input metadata is accurate)
 - **`isTxValid`**: Check that a transaction's inputs are still unspent and conflict-free
-- **`verifyTransactionExtraConditions`**: CKB-specific validation (e.g. verify outputs use the correct Omnilock lock script: ACP-enabled for deposit cells, no ACP for custody/change cells)
-- **`getMinimumNativeToken`**: Return the minimum CKB required to transfer assets, accounting for cell capacity (see [Omnilock](#omnilock))
+- **`verifyTransactionExtraConditions`**: CKB-specific validation (e.g. verify outputs use the correct lock script: RFC 0026 ACP for deposit cells, default secp256k1-blake160 for custody/change cells)
+- **`getMinimumNativeToken`**: Return the minimum CKB required to transfer assets, accounting for cell capacity (see [Lock Scripts](#lock-scripts))
 - **`isTransactionInSign`**: Check if the signer service is still processing a transaction
 - **`isTxInMempool`**: Check if a transaction is in the mempool
 - **`PaymentTransactionFromJson`**: Deserialize a `PaymentTransaction` from JSON
 - **`serializeTx`** (protected): Serialize a CKB transaction to string for the Rosen extractor
 - **`boxSelection`** (protected property): `AbstractBoxSelection<CkbUtxo>` implementation for UTXO selection during transaction construction
 
-**Multisig coordination:** CKB requires a new `@rosen-bridge/ckb-multi-sig` package in the [sign-protocols](https://github.com/rosen-bridge/sign-protocols) repo. Ergo's `MultiSigHandler` cannot be reused (Sigma protocol serialization via `ergo-lib-wasm`, interactive commitment exchange). The new package follows the `Communicator` base pattern (P2P messaging via RoseNet, already integrated into guard-service).
+**TSS signing:** CKB is wired as another ECDSA TSS chain, identical to how Bitcoin, Ethereum, Doge, and Binance are wired in [chainHandler.ts](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/chainHandler.ts). The existing [TssSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/tssSigner.ts) and [tss-api](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api) infrastructure handles everything: 4-message approval protocol, MPC signing via [BNB tss-lib](https://github.com/bnb-chain/tss-lib), and signature caching. No new signing package is needed. See [guard rotation with TSS](./guard-signing/tss.md) for keygen, rotation, and asset migration details.
 
-**Signing flow:** Each guard computes the `sighash_all` (a blake2b digest over the transaction hash and witnesses, via `SignerMultisigOmniLockReadonly.getSignInfo()` which prepares a correctly-sized dummy witness before calling `Transaction.getSignHashInfo()`) and signs it with their secp256k1 key (via `signMessageSecp256k1()`). Once M signatures are collected over P2P, the coordinator assembles the multisig bytes (4-byte header `S|R|M|N` + N pubkey hashes + M recoverable ECDSA signatures) using CCC's `MultisigCkbWitness`, wraps them in `OmniLockWitnessLock` molecule format, and places the result in `WitnessArgs.lock`.
-
-**Why not use `SignerMultisigOmniLockReadonly` directly?** CCC's `SignerMultisigOmniLockReadonly` handles Omnilock witness encoding, sighash computation (via `getSignInfo()`), and signature aggregation (via `aggregateTransactions()`). However, its aggregation expects full `TransactionLike` objects (each carrying signatures embedded in witnesses), while the bridge's P2P layer (RoseNet `Communicator`) exchanges bare signatures. The `ckb-multi-sig` package provides the P2P orchestration: tracking collected signatures, detecting when M-of-N threshold is reached, and triggering final assembly. It reuses CCC primitives (`MultisigCkbWitness`, `signMessageSecp256k1()`, and `SignerMultisigOmniLockReadonly` methods like `prepareWitnessArgsAt()`) for the actual witness construction.
-
-No interactive commitment protocol is needed: CKB uses standard ECDSA, so `ckb-multi-sig` is substantially simpler than `ergo-multi-sig` (which requires a 5-message exchange: `GenerateCommitment` -> `Commitment` -> `InitiateSign` -> `Sign` -> `SignedTx`). CKB needs only collect-and-assemble.
+**Signing flow:** `CkbChain` computes the `sighash_all` (a blake2b digest over the transaction hash and witnesses, via CCC's `Transaction.getSignHashInfo()`) for each script group and submits it to the TSS signer. The Go binary runs the MPC protocol with other guards, producing a standard 65-byte recoverable ECDSA signature per sighash. The signature is placed in `WitnessArgs.lock`. Key derivation uses BIP-44 path `m/44'/309'/0'` via the existing ECDSA TSS `DerivingPubkeyFromPath()` mechanism.
 
 #### 5d. Abstract Chain Network
 
@@ -289,7 +289,7 @@ No interactive commitment protocol is needed: CKB uses standard ECDSA, so `ckb-m
 | --------- | -------------------------------------------- |
 | Network   | `CkbRpcNetwork` extends `AbstractCkbNetwork` |
 
-Implements the network interface using CKB JSON-RPC. The Rosen Bridge testbed uses zero-value test tokens on CKB mainnet (not testnet), so all code targets mainnet from the start. System script references (xUDT, Omnilock) should be configurable, since deployment hashes may differ across networks.
+Implements the network interface using CKB JSON-RPC. The Rosen Bridge testbed uses zero-value test tokens on CKB mainnet (not testnet), so all code targets mainnet from the start. System script references (xUDT, default lock, ACP) should be configurable, since deployment hashes may differ across networks.
 
 Abstract network methods (from `AbstractChainNetwork` and `AbstractUtxoChainNetwork`):
 
@@ -338,18 +338,19 @@ Wiring modules into the main services.
 
 **Repo:** [guard-service](https://github.com/rosen-bridge/guard-service)
 
-- Add `GuardsCkbConfigs` with bridge address, cold address, RPC URL, confirmation counts (observation, payment, cold, manual, arbitrary), and system script hashes (xUDT, Omnilock) per network
+- Add `GuardsCkbConfigs` with bridge address, cold address, RPC URL, confirmation counts (observation, payment, cold, manual, arbitrary), system script hashes (xUDT, default lock, ACP), `tssChainCode`, and `derivationPath` per network
+- Wire CKB as an ECDSA TSS chain in `chainHandler.ts` via [`wrapCurveSignMediator()`](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts)
 - Initialize `CkbChain` with `CkbRpcNetwork` in chain handler
 - Register asset health check for CKB and scanner sync health check (`ScannerSyncHealthCheckParam`)
 - Add CKB to `SUPPORTED_CHAINS` and `ChainNativeToken` at index 9
-- Add default configuration in `default.yaml`
+- Add default configuration in `default.yaml` (including `ckb.tssChainCode` and `ckb.derivationPath`)
 
 ### Phase 8: UI
 
 **Repo:** [ui](https://github.com/rosen-bridge/ui)
 
 - Add CKB chain icon, constants, and address/token/tx URL helpers
-- Implement `@rosen-network/ckb` package with lock transaction generation via CCC (constructing ACP deposit transactions for both xUDT and native CKB, with metadata in cell data)
+- Implement `@rosen-network/ckb` package with lock transaction generation via CCC (constructing RFC 0026 ACP deposit transactions for both xUDT and native CKB, with metadata in cell data)
 - Add CCC-based wallet integration (JoyID and other CKB-compatible wallets)
 - Configure asset calculator for CKB
 - Wire CKB scanner and extractors into Rosen Service
@@ -363,7 +364,7 @@ Handled by the Rosen Bridge team:
 - Mint CKB bridge config tokens on Ergo (RWT, AWC)
 - Register CKB native token and xUDT bridge tokens on Ergo
 - Deploy bridged token xUDT cells on CKB using single-use lock (mint full supply, destroy mint key)
-- Deploy Omnilock ACP cells for each bridged xUDT (auth flag `0x06`, `blake160(multisig_script)` as auth content, omnilock flags `0x02`). Each cell must carry enough CKB for its structure plus the largest expected metadata payload (146 base + 75 bytes for Cardano addresses = 221 CKB minimum)
+- Deploy RFC 0026 ACP cells for each bridged xUDT (`blake160(tss_shared_pubkey)` as lock args, with `min_ckb` and `min_udt` bytes). Each cell must carry enough CKB for its structure plus the largest expected metadata payload (144 base + 75 bytes for Cardano addresses = 219 CKB minimum)
 - Audit target ecosystem xUDT tokens (iCKB, SEAL, etc.) before registration (see [Token Support](#token-support) for bridgeability and freeze exclusion criteria)
 
 ## Delivery Timeline
@@ -384,12 +385,18 @@ Handled by the Rosen Bridge team:
 - [Bridge Expansion Kit (RCS-003)](https://github.com/rosen-bridge/rcs/tree/master/rcs-003)
 - [Rosen Contribution Standards](https://github.com/rosen-bridge/rcs)
 - [Rosen Sign Protocols](https://github.com/rosen-bridge/sign-protocols)
+- [tss-api (Go MPC binary)](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api)
+- [BNB tss-lib](https://github.com/bnb-chain/tss-lib)
 - [CCC SDK](https://github.com/ckb-devrel/ccc)
 - [CKB Address Format (RFC 0021)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md)
 - [xUDT Standard (RFC 0052)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0052-extensible-udt/0052-extensible-udt.md)
 - [xUDT Implementation (xudt_rce.c)](https://github.com/nervosnetwork/ckb-production-scripts/blob/master/c/xudt_rce.c)
 - [sUDT Standard (RFC 0025)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0025-simple-udt/0025-simple-udt.md)
+- [secp256k1-blake160-sighash-all (default lock)](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_sighash_all.c)
 - [Anyone-Can-Pay Lock (RFC 0026)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md)
 - [Omnilock (RFC 0042)](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0042-omnilock/0042-omnilock.md)
 - [Single-Use Lock](https://github.com/ckb-devrel/ckb-proxy-locks/tree/main/contracts/single-use-lock)
 - [RGB++ Security Analysis](https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/security-analysis-en.md)
+- [Guard rotation: multi-sig](./guard-signing/multisig.md)
+- [Guard rotation: TSS](./guard-signing/tss.md)
+- [Signing approach comparison](./guard-signing/comparison.md)
