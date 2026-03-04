@@ -25,6 +25,8 @@ Other contracts ([Lock](https://github.com/rosen-bridge/contract/blob/dev/src/ma
 
 [GuardPkHandler](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/guardPkHandler.ts) polls the Guard Config Box every 180 seconds (configurable), caches the public keys and threshold, identifies this guard's index by ECDSA public key comparison, and propagates changes via `updateDependentModules()`. Currently the only dependent module is [ErgoMultiSig](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/ergo-multi-sig/lib/multiSigHandler.ts), which receives the updated PK array via `handlePublicKeysChange()`.
 
+The guard-service [initialization sequence](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/index.ts): database and token handler, P2P communication, guard detection, multi-sig handler for Ergo, chain handler (wires sign mediators), guard config from blockchain, transaction agreement, arbitrary processor, scanners and event processors. The guard config fetch is where on-chain guard set changes are first detected; the periodic update job (every 180s) keeps it in sync.
+
 ## Ergo Multi-Sig Signing Protocol
 
 Ergo uses interactive Schnorr multi-sig via [ergo-lib-wasm](https://github.com/ergoplatform/sigma-rust): a 5-message commitment exchange protocol entirely in TypeScript/WASM, implemented in [multiSigHandler.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/ergo-multi-sig/lib/multiSigHandler.ts). Non-Ergo chains use TSS via an external Go binary instead (see [tss.md](./tss.md)).
@@ -89,7 +91,7 @@ Before cryptographic signing begins, guards must agree on what to sign. [TxAgree
 
 From the [contract README](https://github.com/rosen-bridge/contract) (Section D.2): "all bridge wallet assets should be transferred into their new address in such chains before updating the guard set." That single sentence is the only specification for non-TSS non-Ergo migration. There are no migration scripts, migration-specific code paths, or operational playbooks.
 
-Currently all non-Ergo chains use TSS, so migration procedures will be built around TSS signing. If CKB uses Omnilock multisig instead, it becomes the only non-Ergo chain migrating through a non-TSS path. Ergo does not need migration (Lock address is stable). CKB would be the sole consumer of its own signing package (`ckb-multi-sig`, which does not exist) and its own migration coordination. With TSS, CKB would instead piggyback on whatever procedures get built for Bitcoin, Ethereum, and the other 5+ TSS chains. See [comparison.md](./comparison.md#operational-isolation-of-multisig-migration) for the full analysis.
+Currently all non-Ergo chains use TSS, so migration procedures will be built around TSS signing. With TSS, CKB piggybacks on whatever procedures get built for Bitcoin, Ethereum, and the other 5+ TSS chains. With Omnilock multisig, CKB would become the only non-Ergo chain migrating through a non-TSS path (Ergo does not need migration since its Lock address is stable). CKB would be the sole consumer of its own signing package (`ckb-multi-sig`) and its own migration coordination. See [comparison.md](./comparison.md#operational-isolation-of-multisig-migration) for the full analysis.
 
 ## Asset Migration
 
@@ -111,8 +113,6 @@ See [rosen-bridge/rcs#2](https://github.com/rosen-bridge/rcs/issues/2) for the q
 Each guard holds a persistent `guardMnemonic` that derives both the Ergo Schnorr signing key and the ECDSA key identifying this guard in the on-chain guard set. A separate `tss.secret` key handles P2P message encryption. During rotation, both stay the same (they are the guard's identity).
 
 Chain addresses are loaded at startup from [contracts.json](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/configs/rosenConfig.ts), which provides lock, cold, and contract addresses per chain. Per-chain [config builders](https://github.com/rosen-bridge/guard-service/tree/dev/services/guard-service/src/configs) extract the relevant addresses and signing parameters.
-
-The guard-service [initialization sequence](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/index.ts): database and token handler, P2P communication, guard detection, multi-sig handler for Ergo, chain handler (wires sign mediators), guard config from blockchain, transaction agreement, arbitrary processor, scanners and event processors. The guard config fetch is where on-chain guard set changes are first detected; the periodic update job (every 180s) keeps it in sync.
 
 ## Summary
 
