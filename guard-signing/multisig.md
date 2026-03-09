@@ -91,7 +91,7 @@ Before cryptographic signing begins, guards must agree on what to sign. [TxAgree
 
 From the [contract README](https://github.com/rosen-bridge/contract) (Section D.2): "all bridge wallet assets should be transferred into their new address in such chains before updating the guard set." That single sentence is the only specification for non-TSS non-Ergo migration. There are no migration scripts, migration-specific code paths, or operational playbooks.
 
-Currently all non-Ergo chains use TSS, so migration procedures will be built around TSS signing. With TSS, CKB piggybacks on whatever procedures get built for Bitcoin, Ethereum, and the other 5+ TSS chains. With Omnilock multisig, CKB would become the only non-Ergo chain migrating through a non-TSS path (Ergo does not need migration since its Lock address is stable). CKB would be the sole consumer of its own signing package (`ckb-multi-sig`) and its own migration coordination. See [comparison.md](./comparison.md#operational-isolation-of-multisig-migration) for the full analysis.
+Currently all non-Ergo chains use TSS, so migration procedures will be built around TSS signing. With TSS, CKB piggybacks on whatever procedures get built for the other ECDSA TSS chains (Bitcoin, Ethereum, Doge, Binance, Bitcoin Runes). With Omnilock multisig, CKB would become the only non-Ergo chain migrating through a non-TSS path (Ergo does not need migration since its Lock address is stable). CKB would be the sole consumer of its own signing package (`ckb-multi-sig`) and its own migration coordination. See [comparison.md](./comparison.md#operational-isolation-of-multisig-migration) for the full analysis.
 
 ## Asset Migration
 

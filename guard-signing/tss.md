@@ -22,7 +22,7 @@ The guard-service spawns the Go binary as a child process and communicates via H
 
 The guard-service [spawns](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts) the Go binary as a child process with a random trust key (UUID). The trust key is included in all callbacks; the guard-service rejects callbacks with a wrong key, preventing stale responses from crashed/restarted binaries. On crash, auto-restart after 5 seconds.
 
-The Go binary ([main.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/main.go)) listens on `localhost:9000` (configurable) and exposes: `GET /threshold`, `POST /getPK`, `POST /sign`, `POST /keygen`, `POST /message` (P2P relay). At startup, it loads existing keygen data (if any), subscribes to the `tss` P2P channel, and starts serving.
+The Go binary ([main.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/main.go)) listens on `localhost:4000` (configurable) and exposes: `GET /threshold`, `POST /getPK`, `POST /sign`, `POST /keygen`, `POST /message` (P2P relay). At startup, it loads existing keygen data (if any), subscribes to the `tss` P2P channel, and starts serving.
 
 ### Algorithm Families
 
@@ -140,7 +140,7 @@ Each guard holds:
 |-----------|---------|-------------|
 | Turn duration | 60s | Each guard's signing window |
 | Turn no-work | 10s | Gap at end of each turn |
-| Signature timeout | 300s | Max time for a signing operation |
+| Signature timeout | 600s (10 min) | Max time for a signing operation |
 | Sign cache TTL | 86400s (24h) | How long to cache signatures |
 | Signs per round | 5 | Max parallel signatures per turn |
 | Threshold TTL | 60s | Re-query interval for threshold |

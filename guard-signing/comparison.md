@@ -1,6 +1,6 @@
 # CKB Bridge Wallet: Omnilock Multisig vs TSS + ACP
 
-A comparison of two signing approaches for the CKB integration into [Rosen Bridge](../README.md): on-chain multisig via [Omnilock](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0042-omnilock/0042-omnilock.md) (auth flag `0x06`) with composable ACP, and off-chain threshold signing via ECDSA TSS with standalone [RFC 0026 ACP](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md).
+A comparison of two signing approaches for the CKB integration into [Rosen Bridge](../README.md): on-chain multisig via [Omnilock](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0042-omnilock/0042-omnilock.md) (auth flag `0x06`) with composable ACP, and off-chain threshold signing via ECDSA TSS with standalone [RFC 0026 ACP](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md). CKB also has a [system multisig script](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_multisig_all.c) (non-Omnilock), but it lacks ACP composability and depends on CCC PR [#349](https://github.com/ckb-devrel/ccc/pull/349) (open, not merged) for signer support. [#360](https://github.com/ckb-devrel/ccc/pull/360) (draft, not merged) is a superset of #349 that adds Omnilock multisig signers. See [README](../README.md#1-multi-signer-addresses) for the full comparison.
 
 ## Omnilock Multisig + ACP
 
@@ -25,7 +25,7 @@ S|R|M|N | pubkey_hashes      | signatures
 
 For M=19, N=30: `4 + (30 * 20) + (19 * 65)` = **1839 bytes**.
 
-Signing: each guard computes [`sighash_all`](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_sighash_all.c) (blake2b digest over transaction hash and witnesses) and signs with secp256k1. Coordinator collects M signatures via P2P ([Communicator](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/communication/lib/communicator.ts)), assembles multisig bytes using CCC's [MultisigCkbWitness](https://github.com/ckb-devrel/ccc/pull/360) (draft PR #360), wraps in [OmniLockWitnessLock](https://github.com/cryptape/omnilock/blob/main/c/omni_lock.c#L337) molecule format. No interactive commitment protocol needed (unlike [Ergo's 5-round Schnorr](./multisig.md#ergo-multi-sig-signing-protocol)).
+Signing: each guard computes [`sighash_all`](https://github.com/nervosnetwork/ckb-system-scripts/blob/master/c/secp256k1_blake160_sighash_all.c) (blake2b digest over transaction hash and witnesses) and signs with secp256k1. Coordinator collects M signatures via P2P ([Communicator](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/communication/lib/communicator.ts)), assembles multisig bytes using CCC's [MultisigCkbWitness](https://github.com/ckb-devrel/ccc/pull/349) (PR #349), wraps in [OmniLockWitnessLock](https://github.com/cryptape/omnilock/blob/main/c/omni_lock.c#L337) molecule format (PR #360). No interactive commitment protocol needed (unlike [Ergo's 5-round Schnorr](./multisig.md#ergo-multi-sig-signing-protocol)).
 
 ## TSS + Standalone ACP
 
@@ -80,7 +80,7 @@ CKB would be wired as another ECDSA TSS chain, identical to how Bitcoin, Ethereu
 
 Cell capacity, transaction fees, and deposit flow are functionally equivalent between the two approaches. Omnilock lock args are 2 bytes longer than TSS lock args (auth flag + omnilock_flags), resulting in a fixed 2 CKB difference per cell ([1 CKB per byte](https://docs.nervos.org/docs/tech-explanation/economics#state-rent), [RFC 0022](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0022-transaction-structure/0022-transaction-structure.md)). The witness size difference is larger (Omnilock 1839B vs TSS 65B for M=19, N=30) but CKB transaction fees are low enough (under 0.0001 CKB per spending tx at standard fee rates) that this does not materially affect bridge economics. A typical consolidation transaction (1 ACP input, 1 custody output) comes to ~2300 bytes with Omnilock (dominated by the 1839-byte multisig witness) vs ~500 bytes with TSS. Deposits use the ACP path in both cases (Omnilock's [omni_lock_acp.h](https://github.com/cryptape/omnilock/blob/main/c/omni_lock_acp.h) reimplements [RFC 0026](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0026-anyone-can-pay/0026-anyone-can-pay.md) rules), so the user-facing deposit flow is identical.
 
-Signing latency is comparable. Omnilock multisig uses 3-minute [GuardTurn](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/utils/guardTurn.ts) turns (180s period, 120s active) with a single P2P round to collect M independent signatures. TSS uses shorter 60-second turns but adds MPC execution time (6-8 rounds of [Gennaro-Goldfeder ECDSA](https://github.com/bnb-chain/tss-lib) via the Go binary). TSS additionally supports signature caching (24-hour TTL) and up to 5 parallel signatures per turn.
+Signing latency is comparable. Omnilock multisig uses 3-minute [GuardTurn](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/utils/guardTurn.ts) cycles (180s period, 120s active) with a single P2P round to collect M independent signatures. TSS uses shorter 60-second turns but adds MPC execution time (6-8 rounds of [Gennaro-Goldfeder ECDSA](https://github.com/bnb-chain/tss-lib) via the Go binary). TSS additionally supports signature caching (24-hour TTL) and up to 5 parallel signatures per turn.
 
 TSS + ACP uses two lock scripts (default lock for custody, RFC 0026 ACP for deposits) instead of Omnilock's single script with different args flags. This has no practical impact: both approaches produce separate [script groups](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0022-transaction-structure/0022-transaction-structure.md) for ACP vs custody cells, require the same number of cell_deps for typical transactions, and need comparable lock detection logic in `CkbChain`.
 
@@ -94,7 +94,7 @@ Omnilock is deployed by `type` ([upgradable](https://github.com/cryptape/omniloc
 
 ### TSS + Standalone ACP
 
-The default `secp256k1-blake160-sighash-all` lock is a [system script](https://github.com/nervosnetwork/ckb-system-scripts) deployed in CKB's genesis block, never upgraded since genesis. The RFC 0026 ACP lock is deployed by `type` but has never been upgraded since 2020. Both are safe to reference by `data`.
+The default `secp256k1-blake160-sighash-all` lock is a genesis-deployed [system script](https://github.com/nervosnetwork/ckb-system-scripts) (no runtime privilege; see [README](../README.md#1-multi-signer-addresses)), never upgraded since genesis. The RFC 0026 ACP lock is deployed by `type` but has never been upgraded since 2020. Both are safe to reference by `data`.
 
 **Upgrade surface**: zero upgradable scripts (both `data`-referenced, never upgraded since deployment).
 
@@ -116,7 +116,7 @@ The default `secp256k1-blake160-sighash-all` lock is a [system script](https://g
 
 **Go binary failure**: Omnilock signing is pure TypeScript. TSS depends on the [tss-api Go binary](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api), which auto-restarts on crash (5s gap). This risk already exists for all other TSS chains.
 
-**TSS compromise at bridge level**: Rosen Bridge already uses ECDSA TSS for 5+ chains sharing the same tss-lib, Go binary, and keygen shares. If an attacker finds a tss-lib vulnerability, they can exploit it against Bitcoin or Ethereum without needing CKB. Adding CKB to TSS does not meaningfully expand the attack surface; using on-chain multisig on CKB does not protect the bridge as a whole. This is the same reasoning applied to the [Quantum Resistant Lock](../README.md#1-multi-signer-addresses).
+**TSS compromise at bridge level**: Rosen Bridge already uses ECDSA TSS for 5+ chains sharing the same tss-lib, Go binary, and keygen shares. If an attacker finds a tss-lib vulnerability, they can exploit it against Bitcoin or Ethereum without needing CKB. Adding CKB to TSS does not meaningfully expand the attack surface. Both approaches enforce the same M-of-N threshold with the same cryptographic assumptions, so switching CKB to on-chain multisig does not harden a bridge where all chains share a single trust boundary. This is the same reasoning applied to the [Quantum Resistant Lock](../README.md#1-multi-signer-addresses).
 
 | Dimension | Omnilock multisig | TSS + ACP |
 |---|---|---|
@@ -159,7 +159,7 @@ With Omnilock, CKB's migration is **CKB-scoped**. With TSS, it is part of a **br
 
 **TSS:**
 1. New guard set runs keygen ceremony (~10 min). Produces new ECDSA and EdDSA shared public keys (and per-guard private shares via DKG).
-2. Derive new CKB lock address via BIP-32 (`m/44'/309'/0'`)
+2. Derive new CKB lock address: BIP-44 path `m/44'/309'/0'/0` produces the public key, `blake160(pubkey)` gives the lock args
 3. Submit arbitrary orders for each CKB asset
 4. Old guards sign via TSS MPC (Go binary)
 5. Wait for 50 CKB confirmations (~8 minutes)
@@ -200,11 +200,13 @@ The signing protocol itself is straightforward (collect-and-assemble, simpler th
 
 ## Implementation Scope
 
-### Omnilock Multisig
+### On-Chain Multisig (Either Variant)
 
-Requires:
+Both multisig variants require:
 - **`ckb-multi-sig` package**: new `@rosen-bridge/ckb-multi-sig` in [sign-protocols](https://github.com/rosen-bridge/sign-protocols) with P2P coordination, sighash computation, and multisig witness assembly (~500-1000 LOC)
-- **CCC Multisig Omnilock PR** ([#360](https://github.com/ckb-devrel/ccc/pull/360), draft): dependency for witness encoding (adds `MultisigCkbWitness`, `OmniLockWitnessLock`, and multisig signer classes)
+- **Unmerged CCC PRs**: [#349](https://github.com/ckb-devrel/ccc/pull/349) (open) adds system multisig signers (`SignerMultisigCkbPrivateKey`), witness codec (`MultisigCkbWitness`), and transaction aggregation. [#360](https://github.com/ckb-devrel/ccc/pull/360) (draft) is a superset of #349 that adds Omnilock witness encoding (`OmniLockWitnessLock`) and Omnilock multisig signers (`SignerMultisigOmniLockPrivateKey`). System multisig needs only #349; Omnilock needs #360.
+
+Omnilock-specific:
 - **Omnilock molecule encoding**: [OmniLockWitnessLock](https://github.com/cryptape/omnilock/blob/main/c/omni_lock.c) construction, dummy witness sizing, placeholder creation, final encoding
 - **Lock script handling**: parse Omnilock auth flag + auth content + omnilock flags for cell detection
 
@@ -215,7 +217,7 @@ Does not require changes to TSS infrastructure or Go binary configuration.
 Requires:
 - **Guard config**: add `ckb.tssChainCode` and `ckb.derivationPath` (3 lines in `default.yaml`, 2 lines in `GuardsCkbConfigs`)
 - **TSS chain wiring**: add CKB to `chainHandler.ts` with `wrapCurveSignMediator()` (~10 lines)
-- **Key derivation**: BIP-44 path `m/44'/309'/0'` ([CKB technical parameters](../README.md#ckb-technical-parameters)), passed to existing ECDSA TSS. No separate keygen needed.
+- **Key derivation**: BIP-44 path `m/44'/309'/0'/0` ([CKB technical parameters](../README.md#ckb-technical-parameters)), passed to existing ECDSA TSS. No separate keygen needed.
 - **Lock script handling**: detect two `code_hash` values (default lock and ACP)
 
 Does not require a new signing package, CCC multisig PR, or Omnilock molecule encoding.
@@ -248,7 +250,7 @@ Does not require a new signing package, CCC multisig PR, or Omnilock molecule en
 | **Spending witness size** | 1839 bytes (M=19, N=30) | 65 bytes |
 | **Consolidation tx size** | ~2300 bytes | ~500 bytes |
 | **Lock script upgrade risk** | Zero (with `data` reference) | Zero (`data`-referenced, never upgraded) |
-| **New code required** | ~500-1000 LOC + CCC PR dependency | ~10 LOC + 5 config lines |
+| **New code required** | ~500-1000 LOC + 2 unmerged CCC PRs | ~10 LOC + 5 config lines |
 | **CKB signing dependency** | Pure TypeScript | Go binary (already running for 5+ chains) |
 | **Guard rotation scope** | CKB-scoped (~20 min) | Bridge-wide (~45 min) |
 | **Overlapping guards** | No conflict (individual keys persist) | Dual-share conflict |
