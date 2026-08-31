@@ -1,0 +1,6 @@
+packages:
+  - "."
+
+# pnpm reads release-age policy from the workspace file, including for one package.
+minimumReleaseAge: 1440
+minimumReleaseAgeIgnoreMissingTime: false

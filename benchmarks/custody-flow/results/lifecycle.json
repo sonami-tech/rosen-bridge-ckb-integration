@@ -1,0 +1,2596 @@
+{
+  "command": [
+    "pnpm",
+    "generate:lifecycle"
+  ],
+  "node": "v24.18.0",
+  "planningGate": "every planning report must complete with zero no-fit observations",
+  "publicSeeds": [
+    "0x6f332d7075626c6963",
+    "0x726f73656e2d636b62",
+    "0x736f6e616d692d6f33"
+  ],
+  "reports": [
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 50,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 0,
+          "maxRequired": 9,
+          "maxReserved": 9,
+          "maxUnavailable": 9,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 17,
+          "supplied": 20
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 0,
+          "maxRequired": 9,
+          "maxReserved": 9,
+          "maxUnavailable": 9,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 18,
+          "supplied": 20
+        },
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 23,
+          "maxReserved": 23,
+          "maxUnavailable": 23,
+          "minCanonical": 40,
+          "minCapacity": "18407999960500",
+          "minVisible": 35,
+          "supplied": 40
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 50,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 50,
+          "max": 60000,
+          "p50": 0,
+          "p95": 60000
+        },
+        "broadcastToCommit": {
+          "count": 50,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 50,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 50,
+          "max": 257000,
+          "p50": 241000,
+          "p95": 257000
+        },
+        "tssQueue": {
+          "count": 50,
+          "max": 74000,
+          "p50": 14000,
+          "p95": 74000
+        }
+      },
+      "noFit": {},
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 5,
+        "maxTss": 7
+      },
+      "scenario": "mixed-shared-capacity",
+      "stages": {
+        "agreementStarted": 50,
+        "approved": 50,
+        "arrived": 50,
+        "broadcast": 50,
+        "candidate": 50,
+        "candidateExpired": 0,
+        "committed": 50,
+        "indexed": 50,
+        "signed": 50,
+        "tssAdmitted": 50,
+        "tssQueued": 50,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          2,
+          5,
+          3,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 10,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          27900,
+          102300
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 15000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 50,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 0,
+          "maxRequired": 6,
+          "maxReserved": 6,
+          "maxUnavailable": 6,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 17,
+          "supplied": 20
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 0,
+          "maxRequired": 9,
+          "maxReserved": 8,
+          "maxUnavailable": 9,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 18,
+          "supplied": 20
+        },
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 18,
+          "maxReserved": 18,
+          "maxUnavailable": 18,
+          "minCanonical": 40,
+          "minCapacity": "18407999960500",
+          "minVisible": 37,
+          "supplied": 40
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 50,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 50,
+          "max": 60000,
+          "p50": 0,
+          "p95": 60000
+        },
+        "broadcastToCommit": {
+          "count": 50,
+          "max": 103000,
+          "p50": 28000,
+          "p95": 103000
+        },
+        "commitToIndexer": {
+          "count": 50,
+          "max": 15000,
+          "p50": 15000,
+          "p95": 15000
+        },
+        "endToEnd": {
+          "count": 50,
+          "max": 240000,
+          "p50": 165000,
+          "p95": 240000
+        },
+        "tssQueue": {
+          "count": 50,
+          "max": 74000,
+          "p50": 14000,
+          "p95": 74000
+        }
+      },
+      "noFit": {},
+      "profile": "proposal-window-edges",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 5,
+        "maxTss": 7
+      },
+      "scenario": "mixed-shared-capacity",
+      "stages": {
+        "agreementStarted": 50,
+        "approved": 50,
+        "arrived": 50,
+        "broadcast": 50,
+        "candidate": 50,
+        "candidateExpired": 0,
+        "committed": 50,
+        "indexed": 50,
+        "signed": 50,
+        "tssAdmitted": 50,
+        "tssQueued": 50,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          2,
+          5,
+          3,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 10,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000,
+          180000,
+          300000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 60000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 50,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 0,
+          "maxRequired": 15,
+          "maxReserved": 14,
+          "maxUnavailable": 15,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 17,
+          "supplied": 20
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 0,
+          "maxRequired": 15,
+          "maxReserved": 14,
+          "maxUnavailable": 15,
+          "minCanonical": 20,
+          "minCapacity": "284000000000",
+          "minQuantity": "18000",
+          "minVisible": 17,
+          "supplied": 20
+        },
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 36,
+          "maxReserved": 34,
+          "maxUnavailable": 36,
+          "minCanonical": 40,
+          "minCapacity": "18407999960500",
+          "minVisible": 34,
+          "supplied": 40
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 50,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 50,
+          "max": 60000,
+          "p50": 0,
+          "p95": 60000
+        },
+        "broadcastToCommit": {
+          "count": 50,
+          "max": 300000,
+          "p50": 180000,
+          "p95": 300000
+        },
+        "commitToIndexer": {
+          "count": 50,
+          "max": 60000,
+          "p50": 60000,
+          "p95": 60000
+        },
+        "endToEnd": {
+          "count": 50,
+          "max": 557000,
+          "p50": 377000,
+          "p95": 541000
+        },
+        "tssQueue": {
+          "count": 50,
+          "max": 194000,
+          "p50": 134000,
+          "p95": 194000
+        }
+      },
+      "noFit": {},
+      "profile": "delayed-proposal-and-indexer",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 5,
+        "maxTss": 17
+      },
+      "scenario": "mixed-shared-capacity",
+      "stages": {
+        "agreementStarted": 50,
+        "approved": 50,
+        "arrived": 50,
+        "broadcast": 50,
+        "candidate": 50,
+        "candidateExpired": 0,
+        "committed": 50,
+        "indexed": 50,
+        "signed": 50,
+        "tssAdmitted": 50,
+        "tssQueued": 50,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          2,
+          4,
+          2,
+          5,
+          3,
+          4,
+          5,
+          2,
+          3,
+          5,
+          5,
+          5,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          2,
+          1,
+          3,
+          0,
+          2,
+          1,
+          0,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 72,
+        "rounds": 30
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 11,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 11,
+          "maxReserved": 11,
+          "maxUnavailable": 11,
+          "minCanonical": 11,
+          "minCapacity": "4399999994830",
+          "minVisible": 6,
+          "supplied": 11
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 11,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 11,
+          "max": 20000,
+          "p50": 10000,
+          "p95": 20000
+        },
+        "broadcastToCommit": {
+          "count": 11,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 11,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 11,
+          "max": 317000,
+          "p50": 257000,
+          "p95": 317000
+        },
+        "tssQueue": {
+          "count": 11,
+          "max": 74000,
+          "p50": 14000,
+          "p95": 74000
+        }
+      },
+      "noFit": {},
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 10,
+        "maxTss": 8
+      },
+      "scenario": "tss-burst-eleven",
+      "stages": {
+        "agreementStarted": 11,
+        "approved": 11,
+        "arrived": 11,
+        "broadcast": 11,
+        "candidate": 11,
+        "candidateExpired": 0,
+        "committed": 11,
+        "indexed": 11,
+        "signed": 11,
+        "tssAdmitted": 11,
+        "tssQueued": 11,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          5,
+          5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 4,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 1,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 101,
+          "maxReserved": 1,
+          "maxUnavailable": 101,
+          "minCanonical": 101,
+          "minCapacity": "1899999999530",
+          "minVisible": 100,
+          "supplied": 101
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 1,
+          "max": 10000,
+          "p50": 10000,
+          "p95": 10000
+        },
+        "arrivalToCandidate": {
+          "count": 1,
+          "max": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "broadcastToCommit": {
+          "count": 1,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 1,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 1,
+          "max": 197000,
+          "p50": 197000,
+          "p95": 197000
+        },
+        "tssQueue": {
+          "count": 1,
+          "max": 14000,
+          "p50": 14000,
+          "p95": 14000
+        }
+      },
+      "noFit": {},
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 1,
+        "maxPayments": 0,
+        "maxTss": 1
+      },
+      "scenario": "deep-beyond-rpc-page",
+      "stages": {
+        "agreementStarted": 1,
+        "approved": 1,
+        "arrived": 1,
+        "broadcast": 1,
+        "candidate": 1,
+        "candidateExpired": 0,
+        "committed": 1,
+        "indexed": 1,
+        "signed": 1,
+        "tssAdmitted": 1,
+        "tssQueued": 1,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 2,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 5,
+          "maxReserved": 1,
+          "maxUnavailable": 5,
+          "minCanonical": 1,
+          "minCapacity": "799999998624",
+          "minVisible": 0,
+          "supplied": 1
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 2,
+          "max": 50000,
+          "p50": 10000,
+          "p95": 50000
+        },
+        "arrivalToCandidate": {
+          "count": 2,
+          "max": 192000,
+          "p50": 0,
+          "p95": 192000
+        },
+        "broadcastToCommit": {
+          "count": 2,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 2,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 2,
+          "max": 427000,
+          "p50": 197000,
+          "p95": 427000
+        },
+        "tssQueue": {
+          "count": 2,
+          "max": 14000,
+          "p50": 14000,
+          "p95": 14000
+        }
+      },
+      "noFit": {
+        "insufficient-visible-cover": 66
+      },
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 1,
+        "maxPayments": 1,
+        "maxTss": 1
+      },
+      "scenario": "shallow-committed-reuse",
+      "stages": {
+        "agreementStarted": 2,
+        "approved": 2,
+        "arrived": 2,
+        "broadcast": 2,
+        "candidate": 2,
+        "candidateExpired": 0,
+        "committed": 2,
+        "indexed": 2,
+        "signed": 2,
+        "tssAdmitted": 2,
+        "tssQueued": 2,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000,
+          180000,
+          300000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 60000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 1,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 5,
+          "maxReserved": 1,
+          "maxUnavailable": 5,
+          "minCanonical": 1,
+          "minCapacity": "899999999094",
+          "minVisible": 0,
+          "supplied": 1
+        }
+      },
+      "inventoryEvents": {
+        "applied": 1,
+        "scheduled": 1
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 1,
+          "max": 10000,
+          "p50": 10000,
+          "p95": 10000
+        },
+        "arrivalToCandidate": {
+          "count": 1,
+          "max": 1430000,
+          "p50": 1430000,
+          "p95": 1430000
+        },
+        "broadcastToCommit": {
+          "count": 1,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 1,
+          "max": 60000,
+          "p50": 60000,
+          "p95": 60000
+        },
+        "endToEnd": {
+          "count": 1,
+          "max": 1627000,
+          "p50": 1627000,
+          "p95": 1627000
+        },
+        "tssQueue": {
+          "count": 1,
+          "max": 14000,
+          "p50": 14000,
+          "p95": 14000
+        }
+      },
+      "noFit": {
+        "insufficient-visible-cover": 475
+      },
+      "profile": "delayed-proposal-and-indexer",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 1,
+        "maxPayments": 1,
+        "maxTss": 1
+      },
+      "scenario": "shallow-user-deposit-waits",
+      "stages": {
+        "agreementStarted": 1,
+        "approved": 1,
+        "arrived": 1,
+        "broadcast": 1,
+        "candidate": 1,
+        "candidateExpired": 0,
+        "committed": 1,
+        "indexed": 1,
+        "signed": 1,
+        "tssAdmitted": 1,
+        "tssQueued": 1,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          2,
+          1,
+          3,
+          0,
+          2,
+          1,
+          0,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 30
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 2,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 4,
+          "maxRequired": 4,
+          "maxReserved": 4,
+          "maxUnavailable": 4,
+          "minCanonical": 0,
+          "minCapacity": "0",
+          "minQuantity": "0",
+          "minVisible": 0,
+          "supplied": 4
+        },
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 1,
+          "maxReserved": 1,
+          "maxUnavailable": 1,
+          "minCanonical": 1,
+          "minCapacity": "27199998366",
+          "minVisible": 0,
+          "supplied": 0
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 2,
+          "max": 50000,
+          "p50": 10000,
+          "p95": 50000
+        },
+        "arrivalToCandidate": {
+          "count": 2,
+          "max": 22000,
+          "p50": 0,
+          "p95": 22000
+        },
+        "broadcastToCommit": {
+          "count": 2,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 2,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 2,
+          "max": 257000,
+          "p50": 197000,
+          "p95": 257000
+        },
+        "tssQueue": {
+          "count": 2,
+          "max": 14000,
+          "p50": 14000,
+          "p95": 14000
+        }
+      },
+      "noFit": {
+        "insufficient-visible-cover": 11
+      },
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 1,
+        "maxPayments": 1,
+        "maxTss": 1
+      },
+      "scenario": "typed-merge-erosion",
+      "stages": {
+        "agreementStarted": 2,
+        "approved": 2,
+        "arrived": 2,
+        "broadcast": 2,
+        "candidate": 2,
+        "candidateExpired": 0,
+        "committed": 2,
+        "indexed": 2,
+        "signed": 2,
+        "tssAdmitted": 2,
+        "tssQueued": 2,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 130000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 0,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 1,
+          "maxReserved": 1,
+          "maxUnavailable": 1,
+          "minCanonical": 2,
+          "minCapacity": "1000000000000",
+          "minVisible": 2,
+          "supplied": 2
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 0
+        },
+        "arrivalToCandidate": {
+          "count": 7,
+          "max": 970000,
+          "p50": 430000,
+          "p95": 970000
+        },
+        "broadcastToCommit": {
+          "count": 0
+        },
+        "commitToIndexer": {
+          "count": 0
+        },
+        "endToEnd": {
+          "count": 0
+        },
+        "tssQueue": {
+          "count": 0
+        }
+      },
+      "noFit": {},
+      "profile": "agreement-misses-active-window",
+      "queues": {
+        "censoredPayments": 1,
+        "maxCandidates": 1,
+        "maxPayments": 1,
+        "maxTss": 0
+      },
+      "scenario": "candidate-expiry",
+      "stages": {
+        "agreementStarted": 7,
+        "approved": 0,
+        "arrived": 1,
+        "broadcast": 0,
+        "candidate": 7,
+        "candidateExpired": 7,
+        "committed": 0,
+        "indexed": 0,
+        "signed": 0,
+        "tssAdmitted": 0,
+        "tssQueued": 0,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 1,
+      "inventory": {
+        "untyped": {
+          "maxErosion": 0,
+          "maxRequired": 11,
+          "maxReserved": 11,
+          "maxUnavailable": 11,
+          "minCanonical": 11,
+          "minCapacity": "5399999999530",
+          "minVisible": 10,
+          "supplied": 11
+        }
+      },
+      "inventoryEvents": {
+        "applied": 0,
+        "scheduled": 0
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 18,
+          "max": 670000,
+          "p50": 50000,
+          "p95": 670000
+        },
+        "arrivalToCandidate": {
+          "count": 11,
+          "max": 20000,
+          "p50": 10000,
+          "p95": 20000
+        },
+        "broadcastToCommit": {
+          "count": 1,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 1,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 1,
+          "max": 197000,
+          "p50": 197000,
+          "p95": 197000
+        },
+        "tssQueue": {
+          "count": 4,
+          "max": 554000,
+          "p50": 554000,
+          "p95": 554000
+        }
+      },
+      "noFit": {},
+      "profile": "first-five-stalled",
+      "queues": {
+        "censoredPayments": 10,
+        "maxCandidates": 4,
+        "maxPayments": 10,
+        "maxTss": 10
+      },
+      "scenario": "stalled-tss-head",
+      "stages": {
+        "agreementStarted": 11,
+        "approved": 11,
+        "arrived": 11,
+        "broadcast": 4,
+        "candidate": 11,
+        "candidateExpired": 0,
+        "committed": 1,
+        "indexed": 1,
+        "signed": 4,
+        "tssAdmitted": 4,
+        "tssQueued": 18,
+        "tssTimedOut": 7
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 104,
+        "rounds": 12
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 12,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 1,
+          "maxRequired": 4,
+          "maxReserved": 3,
+          "maxUnavailable": 4,
+          "minCanonical": 5,
+          "minCapacity": "71000000000",
+          "minQuantity": "4400",
+          "minVisible": 4,
+          "supplied": 6
+        },
+        "untyped": {
+          "maxErosion": 2,
+          "maxRequired": 9,
+          "maxReserved": 6,
+          "maxUnavailable": 7,
+          "minCanonical": 6,
+          "minCapacity": "2811199991960",
+          "minVisible": 5,
+          "supplied": 9
+        }
+      },
+      "inventoryEvents": {
+        "applied": 2,
+        "scheduled": 2
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 12,
+          "max": 40000,
+          "p50": 10000,
+          "p95": 40000
+        },
+        "arrivalToCandidate": {
+          "count": 12,
+          "max": 45000,
+          "p50": 0,
+          "p95": 45000
+        },
+        "broadcastToCommit": {
+          "count": 12,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 12,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 12,
+          "max": 242000,
+          "p50": 212000,
+          "p95": 242000
+        },
+        "tssQueue": {
+          "count": 12,
+          "max": 14000,
+          "p50": 14000,
+          "p95": 14000
+        }
+      },
+      "noFit": {},
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 2,
+        "maxPayments": 1,
+        "maxTss": 2
+      },
+      "scenario": "cold-and-deposit-inventory",
+      "stages": {
+        "agreementStarted": 12,
+        "approved": 12,
+        "arrived": 12,
+        "broadcast": 12,
+        "candidate": 12,
+        "candidateExpired": 0,
+        "committed": 12,
+        "indexed": 12,
+        "signed": 12,
+        "tssAdmitted": 12,
+        "tssQueued": 12,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 0,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 5000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 60,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 1,
+          "maxRequired": 10,
+          "maxReserved": 9,
+          "maxUnavailable": 10,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "32292",
+          "minVisible": 22,
+          "supplied": 26
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 1,
+          "maxRequired": 8,
+          "maxReserved": 7,
+          "maxUnavailable": 8,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "33457",
+          "minVisible": 22,
+          "supplied": 26
+        },
+        "untyped": {
+          "maxErosion": 1,
+          "maxRequired": 24,
+          "maxReserved": 22,
+          "maxUnavailable": 23,
+          "minCanonical": 47,
+          "minCapacity": "23911799956200",
+          "minVisible": 42,
+          "supplied": 48
+        }
+      },
+      "inventoryEvents": {
+        "applied": 1,
+        "scheduled": 1
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 60,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 50000
+        },
+        "arrivalToCandidate": {
+          "count": 62,
+          "max": 65493,
+          "p50": 826,
+          "p95": 57704
+        },
+        "broadcastToCommit": {
+          "count": 60,
+          "max": 120000,
+          "p50": 120000,
+          "p95": 120000
+        },
+        "commitToIndexer": {
+          "count": 60,
+          "max": 5000,
+          "p50": 5000,
+          "p95": 5000
+        },
+        "endToEnd": {
+          "count": 60,
+          "max": 268283,
+          "p50": 231041,
+          "p95": 265802
+        },
+        "tssQueue": {
+          "count": 60,
+          "max": 74000,
+          "p50": 14000,
+          "p95": 74000
+        }
+      },
+      "noFit": {},
+      "profile": "illustrative-two-minute-commit",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 6,
+        "maxTss": 7
+      },
+      "scenario": "generated-lifecycle-6f332d7075626c6963",
+      "stages": {
+        "agreementStarted": 60,
+        "approved": 60,
+        "arrived": 60,
+        "broadcast": 60,
+        "candidate": 62,
+        "candidateExpired": 2,
+        "committed": 60,
+        "indexed": 60,
+        "signed": 60,
+        "tssAdmitted": 60,
+        "tssQueued": 60,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          2,
+          5,
+          3,
+          5,
+          5,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 13,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          27900,
+          102300
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 15000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 60,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 1,
+          "maxRequired": 8,
+          "maxReserved": 7,
+          "maxUnavailable": 8,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "33257",
+          "minVisible": 23,
+          "supplied": 26
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 1,
+          "maxRequired": 10,
+          "maxReserved": 9,
+          "maxUnavailable": 10,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "32923",
+          "minVisible": 23,
+          "supplied": 26
+        },
+        "untyped": {
+          "maxErosion": 1,
+          "maxRequired": 20,
+          "maxReserved": 18,
+          "maxUnavailable": 19,
+          "minCanonical": 47,
+          "minCapacity": "24608999954200",
+          "minVisible": 44,
+          "supplied": 48
+        }
+      },
+      "inventoryEvents": {
+        "applied": 1,
+        "scheduled": 1
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 60,
+          "max": 55000,
+          "p50": 10000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 61,
+          "max": 65304,
+          "p50": 707,
+          "p95": 57579
+        },
+        "broadcastToCommit": {
+          "count": 60,
+          "max": 103000,
+          "p50": 28000,
+          "p95": 103000
+        },
+        "commitToIndexer": {
+          "count": 60,
+          "max": 15000,
+          "p50": 15000,
+          "p95": 15000
+        },
+        "endToEnd": {
+          "count": 60,
+          "max": 251835,
+          "p50": 176159,
+          "p95": 246152
+        },
+        "tssQueue": {
+          "count": 60,
+          "max": 74000,
+          "p50": 14000,
+          "p95": 74000
+        }
+      },
+      "noFit": {},
+      "profile": "proposal-window-edges",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 6,
+        "maxTss": 8
+      },
+      "scenario": "generated-lifecycle-726f73656e2d636b62",
+      "stages": {
+        "agreementStarted": 60,
+        "approved": 60,
+        "arrived": 60,
+        "broadcast": 60,
+        "candidate": 61,
+        "candidateExpired": 1,
+        "committed": 60,
+        "indexed": 60,
+        "signed": 60,
+        "tssAdmitted": 60,
+        "tssQueued": 60,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          5,
+          3,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 19,
+        "rounds": 20
+      }
+    },
+    {
+      "assumptions": {
+        "agreementDrainMs": 5000,
+        "agreementLatencyMs": 2000,
+        "blockMs": 9300,
+        "commitDelaysMs": [
+          120000,
+          180000,
+          300000
+        ],
+        "constructionMs": 2000,
+        "deepBlocks": 150,
+        "indexerLagMs": 60000,
+        "processorMs": 60000,
+        "proposerActiveMs": 120000,
+        "proposerSlotMs": 180000,
+        "stepMs": 1000,
+        "transactionProfile": {
+          "candidateLimit": 1000,
+          "confirmationDelay": 1,
+          "custodyLockBytes": 53,
+          "custodyLockId": "rosen-lock",
+          "id": "binding-moderate",
+          "maxTransactionBytes": 512000,
+          "oracleCandidateLimit": 20,
+          "pageLimit": 10,
+          "pageSize": 100,
+          "shapingBudget": "template",
+          "signingRoundCeiling": 120,
+          "structural": {
+            "cellDeps": 1,
+            "cycleWeightBytes": 0,
+            "feeRate": {
+              "$bigint": "1000"
+            },
+            "firstGroupWitnessBytes": 85,
+            "headerDeps": 0
+          }
+        },
+        "tssFreshLimit": 5,
+        "tssRoundMs": 60000,
+        "tssScope": "bridge-wide-ecdsa",
+        "tssTimeoutMs": 600000
+      },
+      "completedRequestCount": 60,
+      "inventory": {
+        "typed:0xasset-a": {
+          "maxErosion": 1,
+          "maxRequired": 12,
+          "maxReserved": 10,
+          "maxUnavailable": 11,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "34100",
+          "minVisible": 22,
+          "supplied": 26
+        },
+        "typed:0xasset-b": {
+          "maxErosion": 1,
+          "maxRequired": 14,
+          "maxReserved": 12,
+          "maxUnavailable": 13,
+          "minCanonical": 25,
+          "minCapacity": "355000000000",
+          "minQuantity": "32196",
+          "minVisible": 22,
+          "supplied": 26
+        },
+        "untyped": {
+          "maxErosion": 1,
+          "maxRequired": 39,
+          "maxReserved": 35,
+          "maxUnavailable": 38,
+          "minCanonical": 47,
+          "minCapacity": "23696599957000",
+          "minVisible": 41,
+          "supplied": 48
+        }
+      },
+      "inventoryEvents": {
+        "applied": 1,
+        "scheduled": 1
+      },
+      "latencyMs": {
+        "approvalToTss": {
+          "count": 60,
+          "max": 55000,
+          "p50": 15000,
+          "p95": 55000
+        },
+        "arrivalToCandidate": {
+          "count": 60,
+          "max": 58857,
+          "p50": 788,
+          "p95": 52066
+        },
+        "broadcastToCommit": {
+          "count": 60,
+          "max": 300000,
+          "p50": 180000,
+          "p95": 300000
+        },
+        "commitToIndexer": {
+          "count": 60,
+          "max": 60000,
+          "p50": 60000,
+          "p95": 60000
+        },
+        "endToEnd": {
+          "count": 60,
+          "max": 567979,
+          "p50": 393600,
+          "p95": 554178
+        },
+        "tssQueue": {
+          "count": 60,
+          "max": 194000,
+          "p50": 134000,
+          "p95": 194000
+        }
+      },
+      "noFit": {},
+      "profile": "delayed-proposal-and-indexer",
+      "queues": {
+        "censoredPayments": 0,
+        "maxCandidates": 4,
+        "maxPayments": 5,
+        "maxTss": 17
+      },
+      "scenario": "generated-lifecycle-736f6e616d692d6f33",
+      "stages": {
+        "agreementStarted": 60,
+        "approved": 60,
+        "arrived": 60,
+        "broadcast": 60,
+        "candidate": 60,
+        "candidateExpired": 0,
+        "committed": 60,
+        "indexed": 60,
+        "signed": 60,
+        "tssAdmitted": 60,
+        "tssQueued": 60,
+        "tssTimedOut": 0
+      },
+      "tss": {
+        "admittedByRound": [
+          1,
+          4,
+          2,
+          5,
+          3,
+          4,
+          5,
+          2,
+          3,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "externalSlotsByRound": [
+          2,
+          1,
+          3,
+          0,
+          2,
+          1,
+          0,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "headBlockedJobRounds": 101,
+        "rounds": 30
+      }
+    }
+  ],
+  "schema": "ckb-custody-flow-lifecycle-v1",
+  "simplifications": [
+    "one-second deterministic event-loop resolution",
+    "agreement responses use scenario latency rather than peer simulation",
+    "cold storage is an explicit inventory event plus optional external TSS occupancy",
+    "the historical byte/fee fixtures remain the exact transaction-size evidence",
+    "identity inventory is an in-memory array; RPC pagination, cursor failures, and persisted provenance verification are not modeled",
+    "production deviations require a new model run; the benchmark does not self-tune",
+    "the two-minute commitment profile is an illustrative assumption, not an observed bound"
+  ],
+  "sourcePins": {
+    "ckb": "91b97ab5f67fea203fdc5e5d6fbc19a5e0f8b987",
+    "guard": "ac5702608e8f441a932b01582881a01be32155b0",
+    "tss": {
+      "sha256": "cc41b79a04cb6515c723935f08101cc86efb0164d9048f671898ad460febd61e",
+      "version": "5.2.0"
+    }
+  }
+}

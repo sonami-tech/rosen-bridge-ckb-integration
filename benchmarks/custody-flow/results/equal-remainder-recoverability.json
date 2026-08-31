@@ -1,0 +1,20 @@
+{
+  "command": [
+    "pnpm",
+    "generate:recoverability"
+  ],
+  "node": "v24.18.0",
+  "result": {
+    "acceptedPlans": 15082,
+    "admissiblyPayableStates": 15082,
+    "counterexamples": [],
+    "falseNoFitStates": 0,
+    "invalidPlanStates": 0,
+    "nonFloorTypedChangeStates": 0,
+    "statesEnumerated": 15876,
+    "targetRecoverableStates": 7094,
+    "targetRecoveredPlans": 2906,
+    "unrecoveredStates": 4188
+  },
+  "schema": "ckb-custody-flow-equal-remainder-recoverability-v1"
+}

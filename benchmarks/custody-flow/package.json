@@ -1,0 +1,31 @@
+{
+  "name": "@sonami/ckb-custody-flow-benchmark",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "check": "pnpm typecheck && pnpm test",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "test:fast": "node --test test/benchmark.test.ts test/equal-remainder.test.ts test/lifecycle.test.ts test/order-quantum.test.ts",
+    "test:comparison": "node --test test/benchmark.test.ts test/order-quantum.test.ts",
+    "test:lifecycle": "node --test test/lifecycle.test.ts",
+    "test:equal-remainder": "node --test test/equal-remainder.test.ts",
+    "test:order-quantum": "node --test test/order-quantum.test.ts",
+    "test:recoverability": "node --test test/recoverability.test.ts",
+    "test:recoverability:equal": "node --test --test-name-pattern=equal-remainder test/recoverability.test.ts",
+    "generate": "pnpm generate:comparison && pnpm generate:lifecycle && pnpm generate:recoverability",
+    "generate:comparison": "node scripts/generate-comparison.ts",
+    "generate:lifecycle": "node scripts/generate-lifecycle.ts",
+    "generate:recoverability": "node scripts/generate-recoverability.ts",
+    "observe": "node scripts/observe-pool.ts"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.0",
+    "typescript": "7.0.2"
+  }
+}

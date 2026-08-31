@@ -1,184 +1,109 @@
-# Rosen Bridge: Guard TSS and Key Rotation
+# Rosen Bridge Threshold Signature Scheme and Guard Rotation
 
-How TSS (Threshold Signature Scheme) signing works for non-Ergo chains, how the guard set is rotated, and how assets are migrated to new bridge addresses. This is the TSS companion to [multisig.md](./multisig.md), which covers Ergo multi-sig.
+This document records the executable threshold signature scheme (TSS) behavior inspected for the CKB integration. It distinguishes current source behavior from intended resharing and migration architecture.
 
-## Shared Infrastructure
+## Architecture
 
-The Guard Config Box, runtime detection (GuardPkHandler), transaction agreement protocol, arbitrary transaction mechanism, guard communication, and guard secrets are shared between TSS and multi-sig paths. See [multisig.md](./multisig.md) for details. Key differences for TSS:
+TSS signing uses two layers:
 
-- **GuardPkHandler** does not propagate changes to TSS signers. TSS signers manage their own state via an independent `update()` loop every 10 seconds.
-- **Guard detection** is shared (same `ecdsa-detection` channel). TSS adds dedicated channels: `tss-ecdsa-signing`, `tss-eddsa-signing`, and `tss` (Go binary gossip).
+1. The TypeScript [`TssSigner`](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/packages/tss/lib/tss/tssSigner.ts) coordinates guards, approval, scheduling, liveness, and result caching.
+2. The Go [`tss-api`](https://github.com/rosen-bridge/sign-protocols/tree/f278d8132549dee1a64746e2d64d9d30c0b3bac7/services/tss-api) runs BNB tss-lib keygen and signing.
 
-## TSS Architecture
+Guard-service spawns one Go binary for both ECDSA and EdDSA, supplies a random trust key, and restarts it five seconds after failure. Guard deployments currently download that binary without a pinned version.
 
-TSS signing is split across two processes:
+Successful and failed signing callbacks carry the trust key and are rejected when it does not match the active child process. Keygen is run by the separate keygen service, and its callbacks do not use this signing trust-key contract.
 
-1. **TypeScript TSS signer** ([sign-protocols/packages/tss/](https://github.com/rosen-bridge/sign-protocols/tree/dev/packages/tss)): orchestrates guard-to-guard coordination, turn scheduling, message approval, and caching
-2. **Go TSS binary** ([sign-protocols/services/tss-api/](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api)): executes the actual MPC protocol using [BNB Chain tss-lib v2](https://github.com/bnb-chain/tss-lib)
+Work item 08 owns the approved artifact identity, provenance, and CKB direct-digest compatibility evidence. Shared executable lifecycle and containment remain Rosen-wide Guard scope.
 
-The guard-service spawns the Go binary as a child process and communicates via HTTP. Go binaries communicate with each other via P2P messages routed through the guard-service's libp2p dialer.
+The Go API exposes:
 
-### Go Binary Lifecycle
+- `GET /threshold`
+- `POST /getPK`
+- `POST /sign`
+- `POST /keygen`
+- `POST /message`
 
-The guard-service [spawns](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts) the Go binary as a child process with a random trust key (UUID). The trust key is included in all callbacks; the guard-service rejects callbacks with a wrong key, preventing stale responses from crashed/restarted binaries. On crash, auto-restart after 5 seconds.
+It exposes no regroup or reshare route.
 
-The Go binary ([main.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/main.go)) listens on `localhost:4000` (configurable) and exposes: `GET /threshold`, `POST /getPK`, `POST /sign`, `POST /keygen`, `POST /message` (P2P relay). At startup, it loads existing keygen data (if any), subscribes to the `tss` P2P channel, and starts serving.
+## Algorithms and Derivation
 
-### Algorithm Families
+- **ECDSA secp256k1:** Used by Bitcoin-family and EVM-family chains and proposed for CKB. Child derivation requires a non-empty `uint32[]` path and configured chain-code string.
+- **EdDSA Ed25519:** Used by Cardano. Rosen does not expose a derivation path.
 
-| Algorithm | Curve | Chains | Key Derivation |
-|-----------|-------|--------|----------------|
-| ECDSA | secp256k1 | Bitcoin, Bitcoin Runes, Ethereum, Binance, Doge | BIP-32 via chainCode + derivationPath |
-| EdDSA | Ed25519 | Cardano | chainCode only |
+Rosen's pinned BNB tss-lib implements public/non-hardened ECDSA child derivation only. Every index must be less than `0x80000000`; hardened BIP-32/BIP-44 indices are rejected. Existing Guard material shows arrays such as `[44, 60, 0, 0]`; that array is an illustrative example, not a checked deployment value.
 
-Both share the same [TssSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/tssSigner.ts) base class and the same Go binary. The algorithm is selected per-operation via the `crypto` field.
+CKB therefore proposes the same four-level non-hardened shape, `[44, 309, 0, 0]`. It is BIP-44-shaped namespacing, not a standards-compliant hardened BIP-44 wallet path. The final array and `tssChainCode` string remain Rosen deployment inputs supplied before deriving the CKB public key, lock args, or address.
+
+The configured chain-code string is passed to the Go derivation code as bytes. Current Rosen validation does not enforce BIP-32's nominal 32-byte chain-code length, so the exact value is an operational identifier that must be copied consistently rather than inferred by Sonami.
 
 ## Key Generation
 
-Before signing, guards run a distributed key generation (DKG) ceremony that produces a shared public key and per-guard private shares. No single guard holds the full private key. The ceremony runs once per algorithm.
+The separate [`keygen-service`](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/services/keygen-service/src/service/tss.ts) supports ECDSA and EdDSA. It waits for every configured peer, then invokes `/keygen` with participant IDs, threshold, algorithm, and a 600-second operation timeout.
 
-The [keygen-service](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/keygen-service/src/service/tss.ts) orchestrates the ceremony: it spawns the Go binary, waits for all peers to connect via libp2p, and POSTs to the Go binary's `/keygen` endpoint with the p2pIDs, threshold, peer count, algorithm, and a 10-minute timeout.
+Distributed key generation (DKG) produces:
 
-The Go binary ([ecdsa](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/app/keygen/ecdsa/ecdsa.go), [eddsa](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/app/keygen/eddsa/eddsa.go)) creates party IDs from p2pIDs (sorted by share ID), starts the tss-lib local party, and exchanges messages via P2P gossip until all rounds complete. The output (`LocalPartySaveData`) contains the shared public key, this guard's share ID, and private share material.
+- One shared public key per algorithm
+- One private share and share ID per participant
+- Metadata containing participant count and threshold
 
-Keygen data is persisted to `{TSS_HOME}/{ecdsa,eddsa}/keygen_data.json`. On startup, the Go binary loads these files; if they exist, keygen has already been performed and the shares are ready for signing.
+Each algorithm writes one `{TSS_HOME}/{ecdsa,eddsa}/keygen_data.json`. The current service refuses a new keygen when that file already exists.
 
-## Signing Protocol
+## Signing Behavior
 
-### TypeScript Coordination
+The TypeScript coordinator uses four message types (`request`, `approve`, `start`, and `cached`); signing proceeds as follows:
 
-The [TssSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/tssSigner.ts) base class (extended by [EcdsaSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/ecdsaSigner.ts) and [EddsaSigner](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/eddsaSigner.ts)) manages guard coordination before the MPC protocol runs.
+1. A queued message waits for the current 60-second guard turn.
+2. The initiator requests approval from active guards.
+3. After threshold approval, selected guards start their local Go operation.
+4. The Go parties run multi-party computation (MPC) and return a compact signature and, for ECDSA, a recovery value.
 
-TSS uses 1-minute turns with a 10-second no-work buffer (50s active, 10s gap), compared to Ergo multi-sig's 3-minute turns. The 4-message coordination protocol:
+Important effective behavior at the reviewed commits:
 
-| Message | Direction | Purpose |
-|---------|-----------|---------|
-| request | initiator -> all | "I want to sign this message with these guards" |
-| approve | each peer -> initiator | "I approve; here is my signature on the request" |
-| start | initiator -> approved guards | "Threshold reached; start TSS" |
-| cached | any guard -> requester | "Already signed this; here is the cached result" |
+- The in-memory cache is keyed by raw message only. Chain code and derivation path are not part of the key.
+- The Go concurrent-operation identity is algorithm plus the hash of the message. Concurrent requests for the same digest under different derived keys would conflict.
+- In the exact `@rosen-bridge/tss` 5.2.0 package bytes pinned in the [decision register](../decisions-and-open-questions.md#source-facts), a network-delivered cached result verifies the compact signature against the derived public key, but that path carries a TODO and does not verify the recovery id. Results delivered through the trusted `handleSignData` callback and results served by the local in-memory cache fast path repeat no cryptographic verification at all, and the cache key omits chain code and derivation path.
+- Guard's trust-key check on those callbacks authenticates the callback transport against the active child process. It is not signature or recovery validation and must not be described as such.
+- CKB therefore treats every TSS result as untrusted at its adapter boundary: it requires the recovery id, validates the signature and recovery ranges, recovers the compressed key, and rejects any result whose CKB `blake160` differs from the configured lock args.
 
-When the initiator's turn arrives, it sends `request` to all active guards. Peers validate and respond with `approve`. Once the threshold is reached, the initiator sends `start` and POSTs to its local Go binary. Each approved guard does the same, and the Go binaries run the MPC protocol amongst themselves. On completion, each Go binary calls back to its guard-service with the signature.
+CKB must not rely on the configured cache TTL in [Reviewed Defaults](#reviewed-defaults) or use cache behavior as a transaction-state guarantee.
 
-Successful signatures are cached for 24 hours (configurable). Up to 5 signatures can be produced per turn.
+## CKB Signing Boundary
 
-### Go MPC Layer
+The integration [README](../README.md#wrapper-serialization-and-signing) owns the exact adapter contract, and [work item 03](../implementation/03-guard-chain-and-rpc-integration.md) owns its implementation and verification. The source-backed boundary is that CKB sends one already-computed 32-byte SighashAll digest per distinct full Rosen input-lock group, TSS signs that digest without a CKB prefix or second hash, and the CKB adapter treats the result as untrusted until it validates the signature and recovered key. TSS owns participant approval and MPC execution; the [signing decision](./README.md) records why this boundary was selected.
 
-When the TypeScript layer POSTs to `/sign`, the Go binary ([ecdsa](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/app/sign/ecdsa/ecdsa.go), [eddsa](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/app/sign/eddsa/eddsa.go)) loads keygen data, creates party IDs from the peers list (sorted by share ID), hex-decodes the message, and starts the tss-lib signing party (blake2b is used only internally to compute a routing ID for parallel signing sessions, not to hash the data that gets signed). For ECDSA, it uses `NewLocalPartyWithKDD()` (key derivation delegation) to derive chain-specific keys via BIP-32. Messages flow between parties via P2P gossip until the signature is produced and returned via callback.
+## Key Lifecycle Ownership
 
-### Algorithm Specifics
+### Executable Current State
 
-**ECDSA** ([ecdsaSigner.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/ecdsaSigner.ts)): requires `derivationPath`, produces both `signature` and `signatureRecovery` (needed for Ethereum-style ecrecover). Verification via `secp256k1.ecdsaVerify()`. Supports BIP-32 hierarchical key derivation through the Go binary's `DerivingPubkeyFromPath()`.
+- A fresh DKG produces a new shared public key.
+- Every address derived from that algorithm's key changes.
+- The current Rosen service has no regroup implementation.
+- BNB tss-lib contains resharing primitives that can preserve a public key, but the reviewed public service does not expose them.
 
-**EdDSA** ([eddsaSigner.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/eddsaSigner.ts)): no derivation path (Ed25519 does not support HD derivation). Produces signature only. Verification via `@noble/ed25519`.
+The Rosen contract README describes TSS resharing as the intended guard-update architecture. The reviewed public service does not expose that route, but public source is not evidence about Rosen's private ceremony or rotation procedure.
 
-### Public Key Derivation
+CKB inherits the same key lifecycle as Rosen's existing ECDSA TSS chains. This integration supplies CKB transaction preparation and signature insertion only. Rosen operations own key generation, participant changes, rotation, and any bridge-wide migration. The [deployment handoff work item](../implementation/08-contract-deployment-handoff.md) confirms the current shared public key, `tssChainCode`, derivation array, and resulting CKB lock; it does not require publication or reimplementation of Rosen's operational procedure.
 
-The Go binary derives chain-specific public keys on demand via `POST /getPK` with `crypto`, `chainCode`, and `derivationPath`. For ECDSA, the same keygen shares produce different public keys for different chains by varying the derivation path. For EdDSA, the public key is fixed.
+## Reviewed Defaults
 
-## Chain-Specific Configuration
+- **Turn duration:** 60 seconds.
+- **No-work window:** Final 10 seconds; suppresses approve-to-start only.
+- **Sign timeout:** 600 seconds from queue insertion.
+- **Messages started per turn:** Up to 5 in Guard configuration.
+- **Threshold refresh:** 60 seconds.
+- **Signer update job:** 10 seconds.
+- **Effective cache TTL:** 7,200 seconds from the TypeScript `TssSigner` base class; configured 86,400 seconds is not forwarded.
+- **Keygen timeout:** 600 seconds.
+- **Binary restart gap:** 5 seconds.
 
-Each TSS chain gets a signing mediator wired in [chainHandler.ts](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/chainHandler.ts) via [TssHandler](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts). ECDSA chains use `wrapCurveSignMediator(chainCode, derivationPath)`, EdDSA chains use `wrapEdwardSignMediator(chainCode)`.
+## Sources
 
-| Chain | Algorithm | Config Class | derivationPath |
-|-------|-----------|-------------|----------------|
-| Bitcoin | ECDSA | GuardsBitcoinConfigs | Yes |
-| Bitcoin Runes | ECDSA | GuardsBitcoinRunesConfigs | Yes |
-| Ethereum | ECDSA | GuardsEthereumConfigs | Yes |
-| Binance | ECDSA | GuardsBinanceConfigs | Yes |
-| Doge | ECDSA | GuardsDogeConfigs | Yes |
-| Cardano | EdDSA | GuardsCardanoConfigs | No |
-| Ergo | Multi-sig | GuardsErgoConfigs | N/A |
-
-Each chain's config provides `tssChainCode` and (for ECDSA) `derivationPath` from the guard-service application config. The threshold is queried from the Go binary every 60 seconds via `GET /threshold`.
-
-## Lock Address and Guard Rotation
-
-For TSS chains, the lock address is derived from the TSS public key. Since the public key is produced by the keygen ceremony:
-
-- **New keygen** (new guard set): new public key, new lock address, migration required.
-- **Reshare/regroup** (same public key, different shares): same lock address, no migration. **Not yet implemented.**
-
-The tss-api README mentions regroup, and the [controller](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/api/controller.go) has conflict-checking code for it, but no regroup implementation exists: no API endpoints, no operation structs, no protocol handlers, no message types. Any guard set change currently requires a full new keygen ceremony.
-
-| Chain Family | Lock Address Changes? | Migration Needed? |
-|---|---|---|
-| Ergo (multi-sig) | No (data input pattern) | No |
-| TSS chains (new keygen) | Yes (new public key) | Yes |
-| TSS chains (regroup) | No (same public key) | No (not yet implemented) |
-
-### Rotation Procedure (Current)
-
-1. Run new keygen ceremony with the new guard set (~10-minute timeout). Produces new ECDSA and EdDSA shared public keys (and per-guard private shares).
-2. Derive new lock addresses for each TSS chain from the new public keys.
-3. Migrate all assets from old to new addresses via [arbitrary transactions](./multisig.md#asset-migration).
-4. Update `contracts.json` with new addresses.
-5. Update the Ergo Guard Config Box with new guard PKs (see [multisig.md](./multisig.md#ergo-rotation-no-migration)).
-
-The ordering of steps 4 and 5 relative to the migration is an open question (see [rosen-bridge/rcs#2](https://github.com/rosen-bridge/rcs/issues/2)).
-
-### The Overlapping Guards Problem
-
-The Go binary stores keygen shares in a single file per algorithm ([storage.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/storage/storage.go)), backed by a single in-memory struct. A guard cannot hold old and new shares simultaneously: the Go binary refuses to start a new keygen while the old keygen file exists ([`rosenTss.go`](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/app/rosenTss.go), HTTP 400). Guards overlapping between old and new sets must complete all migration signing before deleting the old keygen file and joining the new keygen.
-
-### Regroup (Future)
-
-If reshare/regroup were implemented, the old and new guard sets would jointly produce fresh shares for the new set, preserving the same public key: no address changes, no migration. tss-lib already provides the resharing protocol. The missing work is Rosen Bridge's wrapper: an HTTP endpoint in the Go binary, P2P message routing, share storage handling, and TypeScript coordination (same pattern as keygen and sign).
-
-## Guard Secrets and Key Material
-
-Each guard holds:
-
-- **guardMnemonic**: derives the ECDSA identity key (shared across all protocols). Stays the same during rotation.
-- **tss.secret**: ECDSA key for P2P message encryption within TSS coordination. Stays the same during rotation.
-- **tss.pubs**: per-guard TSS public info (`curvePub`, `curveShareId`, `edwardShareId`). Changes if a new keygen is run.
-- **Keygen data on disk**: `{TSS_HOME}/{ecdsa,eddsa}/keygen_data.json`. Changes if a new keygen is run.
-
-## Timing Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| Turn duration | 60s | Each guard's signing window |
-| Turn no-work | 10s | Gap at end of each turn |
-| Signature timeout | 600s (10 min) | Max time for a signing operation |
-| Sign cache TTL | 86400s (24h) | How long to cache signatures |
-| Signs per round | 5 | Max parallel signatures per turn |
-| Threshold TTL | 60s | Re-query interval for threshold |
-| TSS update interval | 10s | How often TssSigner.update() runs |
-| Keygen timeout | 600s (10 min) | Max time for keygen ceremony |
-| Binary restart gap | 5s | Wait before restarting crashed binary |
-
-## Summary
-
-### TSS Chains (New Keygen)
-
-| Component | Changes on Rotation? | Action Required |
-|---|---|---|
-| TSS public key (ECDSA + EdDSA) | Yes | New keygen ceremony |
-| Lock addresses (all TSS chains) | Yes | Derive from new public keys |
-| Assets | Must migrate | Arbitrary transactions: old -> new address |
-| keygen_data.json | Yes | New files from ceremony |
-| tss.pubs in config | Yes | Update with new share IDs |
-| contracts.json | Yes | Update all affected addresses |
-
-### TSS Chains (Regroup, Not Yet Implemented)
-
-| Component | Changes on Rotation? | Action Required |
-|---|---|---|
-| TSS public key | No | Same key, different shares |
-| Lock addresses | No | None |
-| Assets | No migration | None |
-| keygen_data.json | Yes | New shares from regroup |
-| tss.pubs in config | Yes | Update with new share IDs |
-
-## References
-
-- [tssSigner.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/tssSigner.ts): TSS coordination base class
-- [ecdsaSigner.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/ecdsaSigner.ts): ECDSA specialization
-- [eddsaSigner.ts](https://github.com/rosen-bridge/sign-protocols/blob/dev/packages/tss/lib/tss/eddsaSigner.ts): EdDSA specialization
-- [tss-api](https://github.com/rosen-bridge/sign-protocols/tree/dev/services/tss-api): Go binary (BNB tss-lib MPC)
-- [tssHandler.ts](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/tssHandler.ts): Guard-service TSS integration
-- [chainHandler.ts](https://github.com/rosen-bridge/guard-service/blob/dev/services/guard-service/src/handlers/chainHandler.ts): Per-chain sign mediator wiring
-- [keygen-service](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/keygen-service/src/service/tss.ts): Keygen ceremony orchestrator
-- [storage.go](https://github.com/rosen-bridge/sign-protocols/blob/dev/services/tss-api/storage/storage.go): Keygen data persistence
-- [BNB tss-lib](https://github.com/bnb-chain/tss-lib): Threshold ECDSA and EdDSA implementation
+- [TSS coordinator](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/packages/tss/lib/tss/tssSigner.ts)
+- [ECDSA signer constructor](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/packages/tss/lib/tss/ecdsaSigner.ts)
+- [Go TSS routes](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/services/tss-api/api/router.go)
+- [Go keygen/sign state](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/services/tss-api/app/rosenTss.go)
+- [Rosen ECDSA derivation adapter](https://github.com/rosen-bridge/sign-protocols/blob/f278d8132549dee1a64746e2d64d9d30c0b3bac7/services/tss-api/app/sign/ecdsa/ecdsa.go)
+- [BNB non-hardened derivation](https://github.com/bnb-chain/tss-lib/blob/28d0622477bfe05ed2c950d2728d8c4ace70a0a0/crypto/ckd/child_key_derivation.go)
+- [Guard TSS handler](https://github.com/rosen-bridge/guard-service/blob/ac5702608e8f441a932b01582881a01be32155b0/services/guard-service/src/handlers/tssHandler.ts)
+- [Guard TSS defaults](https://github.com/rosen-bridge/guard-service/blob/ac5702608e8f441a932b01582881a01be32155b0/services/guard-service/config/default.yaml)
+- [Rosen guard-update documentation](https://github.com/rosen-bridge/contract/blob/ec2a1f15418a08561b28a9b8a31ba4865b4dc7f4/README.md#2-guards-update)
