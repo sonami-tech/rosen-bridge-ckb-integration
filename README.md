@@ -90,6 +90,8 @@ Missing, malformed, or unsupported requests produce no event and no automatic re
 
 The pinned CKB node revision in the [decision register](./decisions-and-open-questions.md#evidence-pins) exposes a JSON-RPC API covering chain data and transaction lookup. The topology avoids a shared operational endpoint by requiring independently operated local nodes for Watchers and Guards.
 
+Whether this topology stands is reopened in the [decision register](./decisions-and-open-questions.md#endpoint-topology); this section is the current contract until that question is resolved.
+
 Scanner and both extractors consume transaction hash, input OutPoints, outputs, `outputs_data`, and witnesses directly. They perform no previous-cell or live-cell resolution during event extraction.
 
 Guard fetches the claimed block through its own node and reruns the shared extractor rather than accepting a normalized Watcher object as proof. The operators and chain views are independent; the extractor semantics are shared, so this is not parser diversity.

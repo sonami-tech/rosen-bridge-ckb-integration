@@ -26,3 +26,5 @@ Work items 02, 03, and 06 may proceed in parallel after 01. Work item 05's Guard
 | [09. Closeout and tracker sync](./09-closeout-and-tracker-sync.md) | All owned repositories | 01-08 as applicable |
 
 Work item 04 specifically depends on work item 03's representative selected-policy template contract. Work item 08 starts alongside implementation and finalizes after work items 01-07.
+
+No work item starts until the decision register's [current-state gate](../decisions-and-open-questions.md#open-questions) is cleared.

@@ -17,7 +17,7 @@ Add CKB funding, asset, scanner-sync, and local infrastructure health signals us
 - Consume library-neutral full-script and balance results from the packed Guard and Scanner contracts. Do not add CCC (the CKB ecosystem JavaScript SDK), a direct CKB codec, or local serialization/capacity mechanics to Health Check.
 - Add Guard asset health using the settled CKB/native registration and configured thresholds.
 - Register the CKB asset, Scanner sync, local-node, and Guard-indexer checks in Guard's existing health-check wiring.
-- Surface Watcher's existing CKB Scanner synchronization signal through the existing `ScannerSyncHealthCheckParam` contract and configured thresholds. Do not calculate lag a second time here.
+- Surface the CKB Scanner synchronization signal added by [work item 02](./02-watcher-ingest-path.md) through Watcher's existing `ScannerSyncHealthCheckParam` contract and configured thresholds. Do not calculate lag a second time here.
 - Report the local CKB node and Guard's integrated-indexer reachability and freshness. Watcher has no indexer dependency. Do not substitute public endpoints.
 - Surface Guard's existing construction-health signal when local node minimum-fee-rate or transaction-size policy is incompatible with shared settings. Do not reimplement that comparison in Health Check.
 - When Guard cannot complete an identity read within `maxIdentityCells`, surface the repository-native unavailable-measurement status with the Guard diagnostic. Never publish a partial balance or rebuild the read in Health Check.
